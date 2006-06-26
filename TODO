@@ -1,4 +1,5 @@
 - investigate unrecognized types
 - check type consistency of given method args
+- require the sdef parser using native libxml2 code
 - write support
 - add an option to generate a Ruby stub file with RDoc comments according to the sdef description tags

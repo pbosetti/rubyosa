@@ -1,0 +1,25 @@
+== Introduction ==
+
+RubyOSA is a bridge that connects Ruby to the AppleScript infrastructure. 
+It automatically populates the API (classes, methods...) according to the 
+target application's scriptable definition.
+
+RubyOSA is an alternative to RubyAEOSA, and supposed to replace it.
+
+RubyOSA is licensied under a BSD license, see the COPYRIGHT file for more 
+information.
+
+== Get started ==
+
+$ ruby extconf.rb
+$ make
+$ sudo make install
+
+== Support ==
+
+Sample code is available in the `sample' sub-directory.
+
+Feel free to send feedback to lsansonetti@apple.com.
+
+When reporting a bug, please set the AEDebugSends and AEDebugReceives 
+environment variables to 1 and attach the logs. 

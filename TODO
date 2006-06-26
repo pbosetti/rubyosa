@@ -1,5 +1,8 @@
-- investigate unrecognized types
-- check type consistency of given method args
-- require the sdef parser using native libxml2 code
-- write support
-- add an option to generate a Ruby stub file with RDoc comments according to the sdef description tags
+- Split OSA.app() in OSA.app_with_name(), OSA.app_with_bundle_id(), 
+  OSA.app_with_signature() and implement them.
+- Investigate unrecognized types.
+- Check type consistency of given method args.
+- Require the sdef parser using native libxml2 code.
+- Add elements write support.
+- Add an option to generate a Ruby stub file with RDoc comments according to 
+  the sdef description tags.

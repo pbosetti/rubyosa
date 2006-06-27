@@ -2,7 +2,7 @@
   OSA.app_with_signature() and implement them.
 - Investigate unrecognized types.
 - Check type consistency of given method args.
-- Require the sdef parser using native libxml2 code.
+- Rewrite the sdef parser using native libxml2 code.
 - Add elements write support.
 - Add an option to generate a Ruby stub file with RDoc comments according to 
   the sdef description tags.

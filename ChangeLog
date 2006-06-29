@@ -1,0 +1,7 @@
+2006-06-27  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* COPYRIGHT, ChangeLog, README, TODO, extconf.rb, 
+	  sample/iTunes_control.rb, sample/iTunes_inspect.rb, sample/sdef.rb, 
+	  src/rbosa.c, src/rbosa.h, src/rbosa_conv.c, src/rbosa_sdef.c, 
+	  lib/rbosa.rb:
+	Initial RubyForge revision.

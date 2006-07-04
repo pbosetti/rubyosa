@@ -55,45 +55,62 @@ rbosa_app_signature (CFURLRef URL)
 }
 
 static bool 
-rbosa_translate_app_name (const char *app_name, VALUE *app_signature, FSRef *fs_ref, const char **error)
+rbosa_translate_app (VALUE criterion, VALUE value, VALUE *app_signature, FSRef *fs_ref, const char **error)
 {
     OSStatus    err;
     CFURLRef    URL;
+
+    *app_signature = Qnil;
+    err = noErr;
  
-    if (access (app_name, R_OK) != -1) {
-        /* Apparently app_name already points to a valid file, let's open it. */
-        err = FSPathMakeRef ((const UInt8 *)app_name, fs_ref, NULL);
-        if (err == noErr) {
-            CFStringRef path;
-
-            path = CFStringCreateWithCString (kCFAllocatorDefault, app_name, kCFStringEncodingUTF8);
-            URL = CFURLCreateWithFileSystemPath (kCFAllocatorDefault, path, kCFURLPOSIXPathStyle, FALSE);
-            CFRelease (path);
-        }
+    if (criterion == ID2SYM (rb_intern ("by_signature"))) {
+        *app_signature = value;
+        err = LSFindApplicationForInfo (*(FourCharCode*)RVAL2CSTR (value), NULL, NULL, fs_ref, &URL);
     }
-    else {
-        /* Mmh not a path, let's ask LaunchServices. */
-        CFMutableStringRef str;
-        CFStringRef dot_app;
-
-        str = CFStringCreateMutable (kCFAllocatorDefault, 0);
-        CFStringAppendCString (str, app_name, kCFStringEncodingUTF8);
+    else { 
+        CFMutableStringRef  str;
         
-        dot_app = CFSTR (".app");
-        if (!CFStringHasSuffix (str, dot_app))
-            CFStringAppend (str, dot_app);
+        str = CFStringCreateMutable (kCFAllocatorDefault, 0);
+        CFStringAppendCString (str, RVAL2CSTR (value), kCFStringEncodingUTF8);
 
-        err = LSFindApplicationForInfo (kLSUnknownCreator, NULL, str, fs_ref, &URL);
+        if (criterion == ID2SYM (rb_intern ("by_path"))) {
+            err = FSPathMakeRef ((const UInt8 *)RVAL2CSTR (value), fs_ref, NULL);
+            if (err == noErr) {
+                URL = CFURLCreateWithFileSystemPath (kCFAllocatorDefault, str, kCFURLPOSIXPathStyle, FALSE);
+            }
+        }
+        else if (criterion == ID2SYM (rb_intern ("by_name"))) {
+            CFStringRef dot_app;
+            
+            dot_app = CFSTR (".app");
+            if (!CFStringHasSuffix (str, dot_app))
+                CFStringAppend (str, dot_app);
+    
+            err = LSFindApplicationForInfo (kLSUnknownCreator, NULL, str, fs_ref, &URL);
+        }
+        else if (criterion == ID2SYM (rb_intern ("by_bundle_id"))) {
+            err = LSFindApplicationForInfo (kLSUnknownCreator, str, NULL, fs_ref, &URL);
+        }
+        else {
+            *error = "Invalid criterion";
+            CFRelease (str);
+            return FALSE;
+        }
+        
+        CFRelease (str);
     }
+    
     if (err != noErr) {
-        *error = "Error when translating the application name";
+        *error = "Error when translating the application";
         return FALSE;
     }
 
-    *app_signature = rbosa_app_signature (URL);
+    if (NIL_P (*app_signature))
+        *app_signature = rbosa_app_signature (URL);
+    
     CFRelease (URL);
 
-    if (*app_signature == Qnil) {
+    if (NIL_P (*app_signature)) {
         *error = "Error when getting the application signature";
         return FALSE;
     }
@@ -102,7 +119,7 @@ rbosa_translate_app_name (const char *app_name, VALUE *app_signature, FSRef *fs_
 }
 
 VALUE
-rbosa_scripting_info (VALUE self, VALUE app)
+rbosa_scripting_info (VALUE self, VALUE criterion, VALUE value)
 {
     const char *    error;
     VALUE           ary;  
@@ -111,7 +128,7 @@ rbosa_scripting_info (VALUE self, VALUE app)
     OSAError        osa_error;
     CFDataRef       sdef_data;
 
-    if (!rbosa_translate_app_name (RVAL2CSTR (app), &signature, &fs, &error))
+    if (!rbosa_translate_app (criterion, value, &signature, &fs, &error))
         rb_raise (rb_eRuntimeError, error);
  
     osa_error = OSACopyScriptingDefinition (&fs, kOSAModeNull, &sdef_data);

@@ -1,5 +1,11 @@
 2006-07-05  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* src/lib/rbosa.rb, src/rbosa.c, src/rbosa_sdef.c, src/rbosa.h,
+	  sample/sdef.rb, sample/iTunes_control.rb, sample/iTunes_inspect.rb:
+
+	API change: OSA.app() is splited in 4 sub-methods: OSA.app_with_name(),
+	OSA.app_with_path(), OSA.app_with_bundle_id() and OSA.app_with_signature.
+
 	* src/lib/rbosa.rb:
 	Convert null elements to nil (fix by Vincent Isambart).
 

@@ -33,7 +33,7 @@
 #include <ruby.h>
 
 /* rbosa_sdef.c */
-VALUE rbosa_scripting_info (VALUE self, VALUE app);
+VALUE rbosa_scripting_info (VALUE self, VALUE criterion, VALUE value);
 
 /* rbosa_conv.c */
 FourCharCode rbobj_to_fourchar (VALUE obj);

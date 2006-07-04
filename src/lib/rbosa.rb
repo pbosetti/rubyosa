@@ -29,8 +29,11 @@ require 'rexml/document'
 require 'date'
 
 class OSA::Application
-    def self.new(signature, classes)
+    attr_reader :sdef
+
+    def self.new(sdef, signature, classes)
         app = self.__new__('sign', signature)
+        app.instance_variable_set(:@sdef, sdef)
         app.instance_variable_set(:@classes, classes)
         return app
     end
@@ -110,9 +113,27 @@ class OSA::ElementList
 end
 
 module OSA
-    def self.app(name)
-        # Gets the XML scripting definition of the given app.
-        signature, sdef = OSA.__scripting_info__(name)
+    def self.app_with_name(name)
+        self.app(*OSA.__scripting_info__(:by_name, name))
+    end
+
+    def self.app_with_path(path)
+        self.app(*OSA.__scripting_info__(:by_path, path))
+    end
+
+    def self.app_with_bundle_id(bundle_id)
+        self.app(*OSA.__scripting_info__(:by_bundle_id, bundle_id))
+    end
+
+    def self.app_with_signature(signature)
+        self.app(*OSA.__scripting_info__(:by_signature, signature))
+    end
+
+    #######
+    private
+    #######
+
+    def self.app(signature, sdef)
         doc = REXML::Document.new(sdef)
 
         # Creates a module for this app, we will define the scripting interface within it.
@@ -297,10 +318,8 @@ EOC
         # Returns an application instance, that's all folks!
         hash = {}
         classes.each_value { |klass| hash[klass::CODE] = klass } 
-        app_class.new(signature, hash)
+        app_class.new(sdef, signature, hash)
     end
-
-    private
 
     def self.add_class_from_xml_element(element, class_elements, repository, app_module)
         real_name = element.attributes['name']

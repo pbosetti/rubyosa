@@ -318,7 +318,7 @@ Init_osa (void)
     sApp = rb_intern ("@app");
 
     mOSA = rb_define_module ("OSA");
-    rb_define_module_function (mOSA, "__scripting_info__", rbosa_scripting_info, 1); 
+    rb_define_module_function (mOSA, "__scripting_info__", rbosa_scripting_info, 2); 
 
     cOSAElement = rb_define_class_under (mOSA, "Element", rb_cObject);
     rb_define_singleton_method (cOSAElement, "__new__", rbosa_element_new, 2);

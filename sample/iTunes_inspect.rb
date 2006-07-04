@@ -2,7 +2,7 @@
 
 require 'rbosa'
 
-app = OSA.app('iTunes')
+app = OSA.app_with_name('iTunes')
 app.sources.each do |source|
     puts source.name
     source.playlists.each do |playlist|

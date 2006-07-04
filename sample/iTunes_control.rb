@@ -6,6 +6,16 @@ include Curses
 
 app = OSA.app('iTunes')
 
+if app.current_track.nil?
+    begin
+        app.sources[0].playlists[0].tracks[0].play
+    rescue => e
+        p e
+        puts "You do not appear to have tracks in your iTunes database."
+        exit 1
+    end
+end
+
 init_screen
 
 addstr <<EOS

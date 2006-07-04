@@ -70,6 +70,9 @@ class OSA::Element
     def to_rbobj
         type = __type__
         case type
+            # Null.
+            when 'null'
+                nil
             # String.
             when 'TEXT', 'utxt'
                 # Force TEXT type to not get Unicode.

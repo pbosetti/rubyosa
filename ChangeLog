@@ -1,3 +1,15 @@
+2006-07-05  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* src/lib/rbosa.rb:
+	Convert null elements to nil (fix by Vincent Isambart).
+
+	* sample/iTunes_control.rb:
+	When starting and if there is currently no track, select the first one 
+	and play it.
+
+	* TODO:
+	Reformat.
+
 2006-06-27  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* COPYRIGHT, ChangeLog, README, TODO, extconf.rb, 

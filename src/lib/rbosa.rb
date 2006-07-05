@@ -133,7 +133,7 @@ module OSA
     private
     #######
 
-    def self.app(signature, sdef)
+    def self.app(name, signature, sdef)
         doc = REXML::Document.new(sdef)
 
         # Creates a module for this app, we will define the scripting interface within it.

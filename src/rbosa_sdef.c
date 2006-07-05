@@ -31,35 +31,35 @@
 #include <unistd.h>
 #include "rbosa.h"
 
-static VALUE
-rbosa_app_signature (CFURLRef URL)
+static void 
+rbosa_app_name_signature (CFURLRef URL, VALUE *name, VALUE *signature)
 {
     CFBundleRef     bundle;
     CFDictionaryRef info;
-    CFStringRef     signature;
-    VALUE           rb_signature;
+    CFStringRef     str;
 
     bundle = CFBundleCreate (kCFAllocatorDefault, URL);
     info = CFBundleGetInfoDictionary (bundle);
-    signature = CFDictionaryGetValue (info, CFSTR ("CFBundleSignature"));
-    if (signature != NULL) {
-        rb_signature = CSTR2RVAL (CFStringGetCStringPtr (signature, CFStringGetFastestEncoding (signature))); 
-    }
-    else {
-        rb_signature = Qnil;
-    }
     
-    CFRelease (bundle);
+    if (NIL_P(*signature)) {
+        str = CFDictionaryGetValue (info, CFSTR ("CFBundleName"));
+        *name = str != NULL ? CSTR2RVAL (CFStringGetCStringPtr (str, CFStringGetFastestEncoding (str))) : Qnil;
+    }
+    if (NIL_P(*signature)) {
+        str = CFDictionaryGetValue (info, CFSTR ("CFBundleSignature"));
+        *signature = str != NULL ? CSTR2RVAL (CFStringGetCStringPtr (str, CFStringGetFastestEncoding (str))) : Qnil;
+    }
 
-    return rb_signature;
+    CFRelease (bundle);
 }
 
 static bool 
-rbosa_translate_app (VALUE criterion, VALUE value, VALUE *app_signature, FSRef *fs_ref, const char **error)
+rbosa_translate_app (VALUE criterion, VALUE value, VALUE *app_signature, VALUE *app_name, FSRef *fs_ref, const char **error)
 {
     OSStatus    err;
     CFURLRef    URL;
 
+    *app_name = Qnil;
     *app_signature = Qnil;
     err = noErr;
  
@@ -85,7 +85,7 @@ rbosa_translate_app (VALUE criterion, VALUE value, VALUE *app_signature, FSRef *
             dot_app = CFSTR (".app");
             if (!CFStringHasSuffix (str, dot_app))
                 CFStringAppend (str, dot_app);
-    
+   
             err = LSFindApplicationForInfo (kLSUnknownCreator, NULL, str, fs_ref, &URL);
         }
         else if (criterion == ID2SYM (rb_intern ("by_bundle_id"))) {
@@ -105,8 +105,7 @@ rbosa_translate_app (VALUE criterion, VALUE value, VALUE *app_signature, FSRef *
         return FALSE;
     }
 
-    if (NIL_P (*app_signature))
-        *app_signature = rbosa_app_signature (URL);
+    rbosa_app_name_signature (URL, app_name, app_signature);
     
     CFRelease (URL);
 
@@ -122,20 +121,21 @@ VALUE
 rbosa_scripting_info (VALUE self, VALUE criterion, VALUE value)
 {
     const char *    error;
-    VALUE           ary;  
+    VALUE           ary;
+    VALUE           name;  
     VALUE           signature;
     FSRef           fs;
     OSAError        osa_error;
     CFDataRef       sdef_data;
 
-    if (!rbosa_translate_app (criterion, value, &signature, &fs, &error))
+    if (!rbosa_translate_app (criterion, value, &signature, &name, &fs, &error))
         rb_raise (rb_eRuntimeError, error);
  
     osa_error = OSACopyScriptingDefinition (&fs, kOSAModeNull, &sdef_data);
     if (osa_error != noErr)
         rb_raise (rb_eRuntimeError, "Cannot get scripting definition : error %d", osa_error);
 
-    ary = rb_ary_new3 (2, signature, CSTR2RVAL ((const char *)CFDataGetBytePtr (sdef_data)));
+    ary = rb_ary_new3 (3, name, signature, CSTR2RVAL ((const char *)CFDataGetBytePtr (sdef_data)));
 
     CFRelease (sdef_data);
 

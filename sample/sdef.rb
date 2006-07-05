@@ -32,5 +32,5 @@ end
 
 app = OSA.send(msg, ARGV.last)
 doc = REXML::Document.new(app.sdef)
-doc.write(STDOUT, 1)
+doc.write(STDOUT, 0)
 puts ""

@@ -33,22 +33,34 @@ rbobj_to_fourchar (VALUE obj)
 {
     FourCharCode result = 0;
 
-    if (rb_obj_is_kind_of(obj, rb_cFixnum)) {
-        result = NUM2UINT(obj);
+#define USAGE_MSG "requires 4 length size string/symbol or integer"
+
+    if (rb_obj_is_kind_of (obj, rb_cInteger)) {
+        result = NUM2UINT (obj);
     }
     else {
-        if (rb_obj_is_kind_of(obj, rb_cSymbol))
-        obj = rb_obj_as_string(obj);
+        if (rb_obj_is_kind_of (obj, rb_cSymbol))
+            obj = rb_obj_as_string (obj);
 
-        if (rb_obj_is_kind_of(obj, rb_cString)) {
-            if (RSTRING(obj)->len != 4)
-                rb_raise(rb_eArgError, "require 4 length size string or Fixnum");
-            result = *(FourCharCode*)(RSTRING(obj)->ptr);
+        if (rb_obj_is_kind_of (obj, rb_cString)) {
+            if (RSTRING (obj)->len != 4)
+                rb_raise (rb_eArgError, USAGE_MSG);
+            result = *(FourCharCode*)(RSTRING (obj)->ptr);
+            result = CFSwapInt32HostToBig (result);
         }
         else {
-            rb_raise(rb_eArgError, "require 4 length size string or Fixnum");
+            rb_raise (rb_eArgError, USAGE_MSG);
         }
     }
+
+#undef USAGE_MSG
 
     return result;
 }
+
+VALUE
+rbosa_four_char_code (VALUE self, VALUE val)
+{
+    return INT2NUM (RVAL2FOURCHAR (val));
+}
+

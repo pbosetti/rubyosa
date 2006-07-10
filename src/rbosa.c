@@ -58,7 +58,7 @@ rbosa_element_make (VALUE klass, AEDesc *desc, VALUE app)
     if (klass == cOSAElement) {
         char    dtStr[5];
     
-        *(DescType*)dtStr = newDesc->descriptorType;
+        *(DescType*)dtStr = CFSwapInt32HostToBig (newDesc->descriptorType);
         dtStr[4] = '\0';
 
         if (strcmp (dtStr, "list") == 0) {
@@ -81,8 +81,21 @@ rbosa_element_make (VALUE klass, AEDesc *desc, VALUE app)
                     datasize = AEGetDescDataSize (&res);
                     data = (void *)malloc (datasize);
                   
-                    if (AEGetDescData (&res, data, datasize) == noErr)
-                        new_klass = rb_hash_aref (classes, CSTR2RVAL (data));
+                    if (AEGetDescData (&res, data, datasize) == noErr) {
+                        char *p;
+#if defined(__LITTLE_ENDIAN__)
+                        char b[5];
+                        b[0] = data[3];
+                        b[1] = data[2];
+                        b[2] = data[1];
+                        b[3] = data[0];
+                        b[4] = '\0';
+                        p = b;
+#else
+                        p = data;
+#endif
+                        new_klass = rb_hash_aref (classes, CSTR2RVAL (p));
+                    }
 
                     free (data);
                 }
@@ -126,6 +139,13 @@ rbosa_element_new (VALUE self, VALUE type, VALUE value)
         c_value = NULL;
         c_value_size = 0;
     }
+    else if (rb_obj_is_kind_of (value, rb_cInteger)) {
+        FourCharCode code;
+
+        code = NUM2INT (value);
+        c_value = (const char *)&code;
+        c_value_size = sizeof (FourCharCode);
+    }  
     else {
         c_value = RVAL2CSTR (value);
         c_value_size = strlen (c_value);
@@ -229,7 +249,7 @@ rbosa_element_type (VALUE self)
     char    dtStr[5];
 
     desc = rbosa_element_aedesc (self);
-    *(DescType*)dtStr = desc->descriptorType;
+    *(DescType*)dtStr = CFSwapInt32HostToBig (desc->descriptorType);
     dtStr[4] = '\0';
 
     return CSTR2RVAL (dtStr);
@@ -319,6 +339,7 @@ Init_osa (void)
 
     mOSA = rb_define_module ("OSA");
     rb_define_module_function (mOSA, "__scripting_info__", rbosa_scripting_info, 2); 
+    rb_define_module_function (mOSA, "__four_char_code__", rbosa_four_char_code, 1);
 
     cOSAElement = rb_define_class_under (mOSA, "Element", rb_cObject);
     rb_define_singleton_method (cOSAElement, "__new__", rbosa_element_new, 2);

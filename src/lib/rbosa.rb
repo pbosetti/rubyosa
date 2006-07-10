@@ -28,11 +28,17 @@ require 'osa'
 require 'rexml/document'
 require 'date'
 
+class String
+    def to_4cc
+        OSA.__four_char_code__(self)
+    end
+end
+
 class OSA::Application
     attr_reader :sdef
 
     def self.new(sdef, signature, classes)
-        app = self.__new__('sign', signature)
+        app = self.__new__('sign', signature.to_4cc)
         app.instance_variable_set(:@sdef, sdef)
         app.instance_variable_set(:@classes, classes)
         return app
@@ -94,7 +100,7 @@ class OSA::Element
      	   	    Date.new(1904, 1, 1) + Date.time_to_day_fraction(0, 0, __data__(type).unpack('q').first)
             # Array.
             when 'list'
-                to_a.map { |x| x.to_rbobj }
+                is_a?(OSA::ElementList) ? to_a.map { |x| x.to_rbobj } : self
             # Enumerator.
             when 'enum'
                 OSA::Enumerator.enum_for_code(__data__('TEXT')) or self
@@ -170,7 +176,7 @@ module OSA
 def #{rubyfy_method(name, type)}
     #{is_app ? "self" : "@app"}.__send_event__('core', 'getd', 
         [['----', Element.__new_object_specifier__('prop', #{is_app ? "Element.__new__('null', nil)" : "self"}, 
-                                                   'prop', Element.__new__('type', '#{code}'))]],
+                                                   'prop', Element.__new__('type', '#{code}'.to_4cc))]],
         true).to_rbobj
 end
 EOC
@@ -199,7 +205,7 @@ EOC
 def #{rubyfy_method(eklass::PLURAL)}
     #{is_app ? "self" : "@app"}.__send_event__('core', 'getd', 
         [['----', Element.__new_object_specifier__('#{eklass::CODE}', #{is_app ? "Element.__new__('null', nil)" : "self"}, 
-                                                   'indx', Element.__new__('abso', 'all '))]],
+                                                   'indx', Element.__new__('abso', 'all '.to_4cc))]],
         true).to_rbobj
 end
 EOC
@@ -346,7 +352,7 @@ EOC
             klass.class_eval <<-EOC 
                 REAL_NAME = '#{real_name}'
                 PLURAL = '#{plural == nil ? real_name + 's' : plural}'
-                CODE = '#{code}' 
+                CODE = '#{code}'
             EOC
 
             app_module.module_eval <<-EOC 
@@ -374,14 +380,14 @@ EOC
         code = "Element.__new__("
         code << case type
             when 'boolean'
-                "(#{varname} ? 'true' : 'fals'), nil"
+                "(#{varname} ? 'true'.to_4cc : 'fals'.to_4cc), nil"
             when 'string', 'Unicode text'    
                 "'TEXT', #{varname}.to_s"
             when 'integer', 'double integer'
                 "'magn', [#{varname}].pack('l')"
             else
                 if enum_group_codes.include?(type)
-                    "'enum', #{varname}.code"
+                    "'enum', #{varname}.code.to_4cc"
                 else     
                     STDERR.puts "unrecognized type #{type}"
                     "'null', nil"

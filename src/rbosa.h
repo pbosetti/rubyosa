@@ -37,6 +37,7 @@ VALUE rbosa_scripting_info (VALUE self, VALUE criterion, VALUE value);
 
 /* rbosa_conv.c */
 FourCharCode rbobj_to_fourchar (VALUE obj);
+VALUE rbosa_four_char_code (VALUE self, VALUE val);
 
 /* helper macros */
 #define RVAL2CSTR(x)        (StringValueCStr (x))

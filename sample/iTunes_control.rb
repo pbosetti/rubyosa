@@ -7,13 +7,9 @@ include Curses
 app = OSA.app_with_name('iTunes')
 
 if app.current_track.nil?
-    begin
-        app.sources[0].playlists[0].tracks[0].play
-    rescue => e
-        p e
-        puts "You do not appear to have tracks in your iTunes database."
-        exit 1
-    end
+    # We don't support write access now, so...
+    puts "Please select a track in iTunes and retry again."
+    exit 1
 end
 
 init_screen

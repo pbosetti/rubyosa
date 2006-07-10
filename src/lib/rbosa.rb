@@ -197,7 +197,7 @@ EOC
                 end 
 
                 if eklass.nil?
-                    STDERR.puts "Cannot find class '#{type}', skipping element '#{eelement}'"
+                    STDERR.puts "Cannot find class '#{type}', skipping element '#{eelement}'" if $VERBOSE
                     next
                 end
 
@@ -336,7 +336,7 @@ EOC
             plural = element.attributes['plural']
     
             if real_name == inherits
-                STDERR.puts "sdef bug: class #{real_name} inherits from itself!"
+                STDERR.puts "sdef bug: class #{real_name} inherits from itself!" if $VERBOSE
                 inherits = nil
             end
 
@@ -389,7 +389,7 @@ EOC
                 if enum_group_codes.include?(type)
                     "'enum', #{varname}.code.to_4cc"
                 else     
-                    STDERR.puts "unrecognized type #{type}"
+                    STDERR.puts "unrecognized type #{type}" if $VERBOSE
                     "'null', nil"
                 end
         end

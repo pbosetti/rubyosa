@@ -32,4 +32,22 @@ $LDFLAGS = '-framework Carbon -framework ApplicationServices'
 exit 1 unless have_func('OSACopyScriptingDefinition')
 exit 1 unless have_func('LSFindApplicationForInfo')
 
+# Avoid `ID' and `T_DATA' symbol collisions between Ruby and Carbon.
+# (adapted code from RubyAEOSA - FUJIMOTO Hisakuni  <hisa@fobj.com>)
+ruby_h = "#{Config::CONFIG['archdir']}/ruby.h"
+intern_h = "#{Config::CONFIG['archdir']}/intern.h"
+new_filename_prefix = 'osx_'
+[ ruby_h, intern_h ].each do |src_path|
+    dst_fname = File.join('./src', new_filename_prefix + File.basename(src_path))
+    $stderr.puts "create #{File.expand_path(dst_fname)} ..."
+    File.open(dst_fname, 'w') do |dstfile|
+        IO.foreach(src_path) do |line|
+            line = line.gsub(/\bID\b/, 'RB_ID')
+            line = line.gsub(/\bT_DATA\b/, 'RB_T_DATA')
+            line = line.gsub(/\bintern.h\b/, "#{new_filename_prefix}intern.h")
+            dstfile.puts line
+        end
+    end
+end
+
 create_makefile('osa', 'src')

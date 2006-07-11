@@ -29,8 +29,8 @@
 #ifndef __RBOSA_H_
 #define __RBOSA_H_
 
+#include "osx_ruby.h"
 #include <Carbon/Carbon.h>
-#include <ruby.h>
 
 /* rbosa_sdef.c */
 VALUE rbosa_scripting_info (VALUE self, VALUE criterion, VALUE value);

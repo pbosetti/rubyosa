@@ -1,3 +1,9 @@
+2006-07-11  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* extconf.rb, src/rbosa.h:
+	Generate modified Ruby headers at build time to avoid symbol
+	collisions (ID, T_DATA).
+
 2006-07-10  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* sample/iTunes_control.rb:

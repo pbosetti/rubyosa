@@ -1,9 +1,9 @@
 [X] Split OSA.app() in OSA.app_with_name(), OSA.app_with_bundle_id(), 
     OSA.app_with_signature(), OSA.app_with_path and implement them.
+[X] Add elements write support.
 [ ] Investigate unrecognized types.
 [ ] Check type consistency of given method args.
 [ ] Rewrite the sdef parser using native libxml2 code.
-[ ] Add elements write support.
 [ ] Allow the possibility to set a timeout for an AppleEvent (adding an
     optional parameter to each dispatch method).
 [ ] Add an option to generate a Ruby stub file with RDoc comments according to 

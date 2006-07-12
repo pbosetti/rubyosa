@@ -10,7 +10,8 @@
 	Use the mute property.
 
 	* TODO:
-	Updated to mention events timeout.
+	- Updated to mention events timeout ;
+	- Closed the 'write-support' point.
 
 2006-07-11  Laurent Sansonetti  <lsansonetti@apple.com>
 

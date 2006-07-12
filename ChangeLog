@@ -1,3 +1,12 @@
+2006-07-12  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* TODO:
+	Updated to mention events timeout.
+
+	* src/lib/rbosa.rb:
+	Prefix generated constant names with a 'C' in case the name starts
+	with an digit, to avoid an exception. 
+
 2006-07-11  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* extconf.rb, src/rbosa.h:

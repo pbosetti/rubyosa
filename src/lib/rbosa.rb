@@ -398,6 +398,7 @@ EOC
     end
 
     def self.rubyfy_constant_string(string)
+        string = 'C' << string if /^\d/.match(string)
         rubyfy_string(string).capitalize.gsub(/\s(.)/) { |s| s[1].chr.upcase }
     end
 

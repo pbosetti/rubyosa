@@ -397,7 +397,7 @@ EOC
     end
 
     def self.new_element_code(type, varname, enum_group_codes)
-        code = "Element.__new__("
+        code = "#{varname}.is_a?(OSA::Element) ? #{varname} : Element.__new__("
         code << case type
             when 'boolean'
                 "(#{varname} ? 'true'.to_4cc : 'fals'.to_4cc), nil"

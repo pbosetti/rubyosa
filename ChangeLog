@@ -4,7 +4,9 @@
 	- Prefix generated constant names with a 'C' in case the name starts
 	  with an digit, to avoid an exception ;
 	- Added write-support for properties ;
-	- Fixed AE -> Ruby boolean type conversion.
+	- Fixed AE -> Ruby boolean type conversion ;
+	- When passing parameters, check if OSA::Element objects are given 
+	  and use them instead of creating new ones.
 
 	* sample/iTunes_control.rb:
 	Use the mute property.

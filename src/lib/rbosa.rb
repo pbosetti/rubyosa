@@ -93,8 +93,12 @@ class OSA::Element
             when 'magn'
                 __data__(type).unpack('d').first
             # Boolean.
-            when 'bool', 'true', 'fals'
-                __data__('bool').unpack('d').first != 0
+            when 'bool'
+                __data__('bool').unpack('c').first != 0
+            when 'true'
+                true
+            when 'fals'
+                false
             # Date.
             when 'ldt '
      	   	    Date.new(1904, 1, 1) + Date.time_to_day_fraction(0, 0, __data__(type).unpack('q').first)
@@ -148,6 +152,32 @@ module OSA
             #{rubyfy_constant_string(name)} = app_module
         EOC
 
+        # Retrieves and creates enumerations.
+        enum_group_codes = []
+        doc.elements.each('/dictionary/suite/enumeration') do |element|
+            enum_group_code = element.attributes['code']
+            enum_group_codes << enum_group_code
+            enum_module_name = rubyfy_constant_string(element.attributes['name']).upcase
+            enum_module = Module.new
+            
+            element.elements.each('enumerator') do |element|
+                name = element.attributes['name']
+                enum_name = rubyfy_constant_string(name).upcase
+                enum_code = element.attributes['code']
+                enum_const = app_module.name + '::' + enum_module_name + '::' + enum_name
+
+                enum = OSA::Enumerator.new(enum_const, name, enum_code, enum_group_code)
+
+                enum_module.module_eval <<-EOC
+                    #{enum_name} = enum    
+                EOC
+            end
+ 
+            app_module.module_eval <<-EOC 
+                #{enum_module_name} = enum_module
+            EOC
+        end
+
         # Retrieves and creates classes.
         classes = {}
         class_elements = {}
@@ -163,6 +193,8 @@ module OSA
                 name = pelement.attributes['name']
                 code = pelement.attributes['code']
                 type = pelement.attributes['type']
+                access = pelement.attributes['access']
+                setter = access == nil or access == 'w'
 
                 pklass = classes[type]
                 if pklass.nil?
@@ -182,6 +214,20 @@ end
 EOC
 
                 klass.class_eval(method_code)
+
+                if setter
+                    method_code = <<EOC
+def #{rubyfy_method(name, type, true)}=(val)
+    #{is_app ? "self" : "@app"}.__send_event__('core', 'setd', 
+        [['----', Element.__new_object_specifier__('prop', #{is_app ? "Element.__new__('null', nil)" : "self"}, 
+                                                   'prop', Element.__new__('type', '#{code}'.to_4cc))],
+         ['data', #{new_element_code(type, 'val', enum_group_codes)}]],
+        true).to_rbobj
+end
+EOC
+
+                    klass.class_eval(method_code)
+                end 
             end
 
             # Creates elements.
@@ -212,32 +258,6 @@ EOC
 
                 klass.class_eval(method_code)
             end
-        end
-
-        # Retrieves and creates enumerations.
-        enum_group_codes = []
-        doc.elements.each('/dictionary/suite/enumeration') do |element|
-            enum_group_code = element.attributes['code']
-            enum_group_codes << enum_group_code
-            enum_module_name = rubyfy_constant_string(element.attributes['name']).upcase
-            enum_module = Module.new
-            
-            element.elements.each('enumerator') do |element|
-                name = element.attributes['name']
-                enum_name = rubyfy_constant_string(name).upcase
-                enum_code = element.attributes['code']
-                enum_const = app_module.name + '::' + enum_module_name + '::' + enum_name
-
-                enum = OSA::Enumerator.new(enum_const, name, enum_code, enum_group_code)
-
-                enum_module.module_eval <<-EOC
-                    #{enum_name} = enum    
-                EOC
-            end
- 
-            app_module.module_eval <<-EOC 
-                #{enum_module_name} = enum_module
-            EOC
         end
 
         # Having an 'application' class is required.
@@ -406,10 +426,10 @@ EOC
         string.gsub(/\s/, '_')
     end
     
-    def self.rubyfy_method(string, return_type=nil)
+    def self.rubyfy_method(string, return_type=nil, setter=false)
         s = rubyfy_string(string) 
         # Suffix predicates with '?'. 
-        if return_type == 'boolean'
+        if return_type == 'boolean' and !setter
             s << '?'
         end
         return s

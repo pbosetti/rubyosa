@@ -21,6 +21,7 @@ Keys available:
   n         go to next song
   f         toggle fast forward
   r         toggle rewind
+  m         toggle mute
   q         exit the program
 
 On track:
@@ -52,6 +53,8 @@ begin
             else
                 app.rewind
             end
+        when 'm'
+            app.mute = !app.mute?
         when 'q' 
             break
         end 

@@ -1,5 +1,12 @@
 2006-07-13  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* src/rbosa.c, src/lib/rbosa.rb:
+	- Do not overwrite new class constants if they already exist ;
+	- When a class in the sdef inherits from a class that is not 
+	  defined, raises a warning and falls back on OSA::Element.
+	- When guessing the class type of an object specifier, make sure
+	  we don't check more than 4 characters.
+
 	* sample/iChat_uptime.rb:
 	New sample.
 

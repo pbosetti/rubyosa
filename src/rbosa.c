@@ -89,11 +89,12 @@ rbosa_element_make (VALUE klass, AEDesc *desc, VALUE app)
                         b[1] = data[2];
                         b[2] = data[1];
                         b[3] = data[0];
-                        b[4] = '\0';
                         p = b;
 #else
                         p = data;
 #endif
+                        if (datasize > 3)
+                            p[4] = '\0';
                         new_klass = rb_hash_aref (classes, CSTR2RVAL (p));
                     }
 

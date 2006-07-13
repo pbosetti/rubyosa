@@ -364,15 +364,20 @@ EOC
                 klass = Class.new(real_name == 'application' ? OSA::Application : OSA::Element)
             else
                 super_element = class_elements[inherits]
-                super_class = add_class_from_xml_element(super_element, class_elements, 
-                                                         repository, app_module)
-                klass = Class.new(super_class)
+                if super_element.nil?
+                    STDERR.puts "sdef bug: class #{real_name} inherits from #{inherits} which is not defined" if $VERBOSE
+                    klass = OSA::Element
+                else
+                    super_class = add_class_from_xml_element(super_element, class_elements, 
+                                                             repository, app_module)
+                    klass = Class.new(super_class)
+                end
             end
             
             klass.class_eval <<-EOC 
-                REAL_NAME = '#{real_name}'
-                PLURAL = '#{plural == nil ? real_name + 's' : plural}'
-                CODE = '#{code}'
+                REAL_NAME = '#{real_name}' unless const_defined?(:REAL_NAME)
+                PLURAL = '#{plural == nil ? real_name + 's' : plural}' unless const_defined?(:PLURAL)
+                CODE = '#{code}' unless const_defined?(:CODE)
             EOC
 
             app_module.module_eval <<-EOC 

@@ -1,3 +1,5 @@
+# Start playing, then fade the volume from 0 to the original setting.
+
 require 'rbosa'
 
 app = OSA.app_with_name('iTunes')

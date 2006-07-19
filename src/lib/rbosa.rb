@@ -226,8 +226,6 @@ def #{rubyfy_method(name, type, true)}=(val)
 end
 EOC
 
-puts method_code if name == 'status message'
-
                     klass.class_eval(method_code)
                 end 
             end

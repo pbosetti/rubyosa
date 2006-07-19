@@ -64,3 +64,32 @@ rbosa_four_char_code (VALUE self, VALUE val)
     return INT2NUM (RVAL2FOURCHAR (val));
 }
 
+void
+rbobj_to_alias_handle (VALUE obj, AliasHandle *alias)
+{
+    FSRef       ref;
+    CFURLRef    URL;
+    Boolean     ok;
+    OSErr       error;
+
+    Check_Type (obj, T_STRING);
+    *alias = NULL;
+
+    URL = CFURLCreateFromFileSystemRepresentation (kCFAllocatorDefault, 
+                                                   (const UInt8 *)RSTRING (obj)->ptr, 
+                                                   RSTRING (obj)->len,
+                                                   0 /* XXX: normally passing 0 even if it's a directory should
+                                                        not hurt, as we are just getting the FSRef. */); 
+    ok = CFURLGetFSRef (URL, &ref);
+    CFRelease (URL);
+    if (ok) {
+        error = FSNewAlias (NULL, &ref, alias);
+        if (error != noErr)
+            rb_raise (rb_eArgError, "Cannot create alias handle for given filename '%s' : %s (%d)",
+                      RSTRING (obj)->ptr, GetMacOSStatusErrorString (error), error); 
+    }
+    else {
+        rb_raise (rb_eArgError, "Cannot obtain the filesystem reference for given filename '%s'",
+                  RSTRING (obj)->ptr);
+    }
+}

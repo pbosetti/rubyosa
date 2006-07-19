@@ -315,7 +315,7 @@ EOC
             p_dec, p_def = [], []
             params.each do |pname, pcode, optional, ptype|
                 decl = pname
-                self_direct = pcode == '----' and forget_direct_parameter
+                self_direct = (pcode == '----' and forget_direct_parameter)
                 defi = if self_direct
                     "['----', self]"
                 else
@@ -325,7 +325,7 @@ EOC
                     decl += '=nil'
                     defi = "(#{pname} == nil ? [] : #{defi})"
                 end 
-                p_dec << decl unless self_direct 
+                p_dec << decl
                 p_def << defi
             end
 
@@ -356,7 +356,9 @@ EOC
             plural = element.attributes['plural']
     
             if real_name == inherits
-                STDERR.puts "sdef bug: class #{real_name} inherits from itself!" if $VERBOSE
+                # Inheriting from itself is a common idiom when adding methods 
+                # to a class that has already been defined, probably to avoid
+                # mentioning the subclass name more than once.
                 inherits = nil
             end
 
@@ -365,7 +367,7 @@ EOC
             else
                 super_element = class_elements[inherits]
                 if super_element.nil?
-                    STDERR.puts "sdef bug: class #{real_name} inherits from #{inherits} which is not defined" if $VERBOSE
+                    STDERR.puts "sdef bug: class #{real_name} inherits from #{inherits} which is not defined - fall back inheriting from OSA::Element"
                     klass = OSA::Element
                 else
                     super_class = add_class_from_xml_element(super_element, class_elements, 
@@ -406,8 +408,11 @@ EOC
         code << case type
             when 'boolean'
                 "(#{varname} ? 'true'.to_4cc : 'fals'.to_4cc), nil"
-            when 'string', 'Unicode text'    
+            when 'string', 'Unicode text'
                 "'TEXT', #{varname}.to_s"
+            when 'alias'
+                # TODO: make alias work!
+                "'alis', #{varname}.to_s"    
             when 'integer', 'double integer'
                 "'magn', [#{varname}].pack('l')"
             else

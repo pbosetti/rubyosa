@@ -131,10 +131,13 @@ rbosa_element_aedesc (VALUE element)
 static VALUE
 rbosa_element_new (VALUE self, VALUE type, VALUE value)
 {
+    FourCharCode    ffc_type;
     OSErr           error;
     const char *    c_value;
     unsigned        c_value_size;
     AEDesc          desc;
+
+    ffc_type = RVAL2FOURCHAR (type);
 
     if (NIL_P (value)) {
         c_value = NULL;
@@ -147,12 +150,20 @@ rbosa_element_new (VALUE self, VALUE type, VALUE value)
         c_value = (const char *)&code;
         c_value_size = sizeof (FourCharCode);
     }  
+    else if (ffc_type == 'alis') {
+        AliasHandle     alias;
+
+        rbobj_to_alias_handle (value, &alias);
+        
+        c_value = (const char *)*alias;
+        c_value_size = GetHandleSize ((Handle)alias);
+    }
     else {
         c_value = RVAL2CSTR (value);
         c_value_size = strlen (c_value);
     }
 
-    error = AECreateDesc (RVAL2FOURCHAR (type), c_value, c_value_size, &desc);
+    error = AECreateDesc (ffc_type, c_value, c_value_size, &desc);
     if (error != noErr)     
         rb_raise (rb_eArgError, "Cannot create Apple Event descriptor from type '%s' value '%s' : %s (%d)", 
                   RVAL2CSTR (type), c_value, GetMacOSStatusErrorString (error), error);

@@ -1,3 +1,10 @@
+2006-07-19  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* src/lib/rbosa.rb, src/rbosa.c, src/rbosa.h, src/rbosa_conv.c:
+	- Fixed methods with direct-parameter mapped to the application class ;
+	- Do not warn for classes that inherit from themselves (not a bug) ;
+	- Added support for aliases (Ruby String -> Carbon AliasHandle).
+
 2006-07-13  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/rbosa.c, src/lib/rbosa.rb:

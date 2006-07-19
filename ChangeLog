@@ -4,7 +4,8 @@
 	- Fixed methods with direct-parameter mapped to the application class ;
 	- Do not warn for classes that inherit from themselves (not a bug) ;
 	- Added support for aliases (Ruby String -> Carbon AliasHandle) ;
-	- Fixed integers-packed-into-string arguments handling.
+	- Fixed integers-packed-into-string arguments handling ;
+	- Handle 'text' element types as strings.
 
 	* sample/iTunes_fade_volume.rb:
 	New sample.

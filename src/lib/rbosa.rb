@@ -226,6 +226,8 @@ def #{rubyfy_method(name, type, true)}=(val)
 end
 EOC
 
+puts method_code if name == 'status message'
+
                     klass.class_eval(method_code)
                 end 
             end
@@ -408,10 +410,9 @@ EOC
         code << case type
             when 'boolean'
                 "(#{varname} ? 'true'.to_4cc : 'fals'.to_4cc), nil"
-            when 'string', 'Unicode text'
+            when 'string', 'text', 'Unicode text'
                 "'TEXT', #{varname}.to_s"
             when 'alias'
-                # TODO: make alias work!
                 "'alis', #{varname}.to_s"    
             when 'integer', 'double integer'
                 "'magn', [#{varname}].pack('l')"

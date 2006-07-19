@@ -159,8 +159,9 @@ rbosa_element_new (VALUE self, VALUE type, VALUE value)
         c_value_size = GetHandleSize ((Handle)alias);
     }
     else {
-        c_value = RVAL2CSTR (value);
-        c_value_size = strlen (c_value);
+        Check_Type (value, T_STRING);
+        c_value = RSTRING (value)->ptr;
+        c_value_size = RSTRING (value)->len;
     }
 
     error = AECreateDesc (ffc_type, c_value, c_value_size, &desc);

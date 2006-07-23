@@ -1,3 +1,9 @@
+2006-07-23  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* src/lib/rbosa.rb, sample/iTunes_fade_volume.rb:
+	- Map direct-specifier-optional commands to the application class ;
+	- Fixed the iTunes_fade_volume.rb sample to call app#play.
+
 2006-07-19  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/lib/rbosa.rb, src/rbosa.c, src/rbosa.h, src/rbosa_conv.c:

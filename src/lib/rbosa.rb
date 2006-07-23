@@ -274,18 +274,22 @@ EOC
  
             classes_to_define = []
             forget_direct_parameter = true
+            direct_parameter_optional = false
 
             if direct_parameter.nil?
                 # No direct parameter, this is for the application class.
                 classes_to_define << app_class
             else
-                # We have a direct parameter, map it to the right class if it's a class
-                # defined in our scripting dictionary, map it to all classes if it's a reference,
-                # otherwise map it to the application class.
+                # We have a direct parameter:
+                # - map it to the right class if it's a class defined in our scripting dictionary
+                # - map it to all classes if it's a 'reference' and to the application class if it's optional
+                # - otherwise, just map it to the application class.
                 type = type_of_parameter(direct_parameter)
+                direct_parameter_optional = parameter_optional?(direct_parameter)
 
                 if type == 'reference'
                     classes_to_define = all_classes_but_app
+                    classes_to_define << app_class if direct_parameter_optional
                 else 
                     klass = classes[type]
                     if klass.nil?
@@ -301,14 +305,17 @@ EOC
  
             params = []
             unless direct_parameter.nil?
-                params << ['direct', '----', false, type_of_parameter(direct_parameter)]
+                params << ['direct', 
+                           '----', 
+                           direct_parameter_optional,
+                           type_of_parameter(direct_parameter)]
             end 
             element.elements.each('parameter') do |element|
                 opt = element.attributes['optional']
                 # Prefix with '_' parameter names to avoid possible collisions with reserved Ruby keywords (for, etc...).
                 params << ['_' + rubyfy_string(element.attributes['name']),
                            element.attributes['code'],
-                           (opt == nil ? false : opt == 'yes'),
+                           parameter_optional?(element),
                            type_of_parameter(element)]
             end
 
@@ -317,15 +324,19 @@ EOC
                 decl = pname
                 self_direct = (pcode == '----' and forget_direct_parameter)
                 defi = if self_direct
-                    "['----', self]"
+                    if forget_direct_parameter
+                        "(self.is_a?(OSA::Application) ? [] : ['----', self])"
+                    else
+                        "['----', self]"
+                    end
                 else
                     "['#{pcode}', #{new_element_code(ptype, pname, enum_group_codes)}]"
                 end
-                if optional
+                if optional and !self_direct
                     decl += '=nil'
                     defi = "(#{pname} == nil ? [] : #{defi})"
                 end 
-                p_dec << decl
+                p_dec << decl unless self_direct
                 p_def << defi
             end
 
@@ -335,8 +346,9 @@ def #{method_name}(#{p_dec.join(', ')})
 end
 EOC
 
-            classes_to_define.each do |klass| 
-                code = method_code.sub(/%RECEIVER%/, klass.ancestors.include?(OSA::Application) ? 'self' : '@app')
+            classes_to_define.each do |klass|
+                is_app = klass.ancestors.include?(OSA::Application) 
+                code = method_code.sub(/%RECEIVER%/, is_app ? 'self' : '@app')
                 klass.class_eval(code)
             end
         end
@@ -345,6 +357,10 @@ EOC
         hash = {}
         classes.each_value { |klass| hash[klass::CODE] = klass } 
         app_class.new(sdef, signature, hash)
+    end
+
+    def self.parameter_optional?(element)
+        element.attributes['optional'] == 'yes'
     end
 
     def self.add_class_from_xml_element(element, class_elements, repository, app_module)

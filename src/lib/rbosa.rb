@@ -341,14 +341,19 @@ EOC
             end
 
             method_code = <<EOC
-def #{method_name}(#{p_dec.join(', ')})
+def %METHOD_NAME%(#{p_dec.join(', ')})
   %RECEIVER%.__send_event__('#{code[0..3]}', '#{code[4..-1]}', [#{p_def.join(', ')}], #{result != nil})#{result != nil ? '.to_rbobj' : ''}
 end
 EOC
 
             classes_to_define.each do |klass|
+                if klass.method_defined?(name)
+                    # TODO: we should generate the method under another name!
+                    STDERR.puts "Method `#{method_name}' already defined in `#{klass}', skipping" if $VERBOSE
+                    next
+                end
                 is_app = klass.ancestors.include?(OSA::Application) 
-                code = method_code.sub(/%RECEIVER%/, is_app ? 'self' : '@app')
+                code = method_code.sub(/%RECEIVER%/, is_app ? 'self' : '@app').sub(/%METHOD_NAME%/, method_name)
                 klass.class_eval(code)
             end
         end

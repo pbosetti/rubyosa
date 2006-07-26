@@ -135,7 +135,9 @@ rbosa_scripting_info (VALUE self, VALUE criterion, VALUE value)
     if (osa_error != noErr)
         rb_raise (rb_eRuntimeError, "Cannot get scripting definition : error %d", osa_error);
 
-    ary = rb_ary_new3 (3, name, signature, CSTR2RVAL ((const char *)CFDataGetBytePtr (sdef_data)));
+    ary = rb_ary_new3 (3, name, signature, 
+                       rb_str_new ((const char *)CFDataGetBytePtr (sdef_data), 
+                                   CFDataGetLength (sdef_data)));
 
     CFRelease (sdef_data);
 

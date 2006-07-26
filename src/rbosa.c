@@ -31,7 +31,7 @@
 static VALUE mOSA;
 static VALUE cOSAElement;
 static VALUE cOSAElementList;
-static VALUE cOSAApplication;
+static VALUE mOSAApplication;
 
 static ID sClasses;
 static ID sApp;
@@ -365,6 +365,6 @@ Init_osa (void)
     rb_define_method (cOSAElementList, "size", rbosa_elementlist_size, 0);
     rb_define_alias (cOSAElementList, "length", "size");
 
-    cOSAApplication = rb_define_class_under (mOSA, "Application", cOSAElement);
-    rb_define_method (cOSAApplication, "__send_event__", rbosa_app_send_event, 4);
+    mOSAApplication = rb_define_module_under (mOSA, "Application");
+    rb_define_method/*_module_function*/ (mOSAApplication, "__send_event__", rbosa_app_send_event, 4);
 }

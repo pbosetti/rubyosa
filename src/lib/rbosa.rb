@@ -34,17 +34,6 @@ class String
     end
 end
 
-class OSA::Application
-    attr_reader :sdef
-
-    def self.new(sdef, signature, classes)
-        app = self.__new__('sign', signature.to_4cc)
-        app.instance_variable_set(:@sdef, sdef)
-        app.instance_variable_set(:@classes, classes)
-        return app
-    end
-end
-
 class OSA::Enumerator
     attr_reader :code, :name, :group_code
     
@@ -361,7 +350,12 @@ EOC
         # Returns an application instance, that's all folks!
         hash = {}
         classes.each_value { |klass| hash[klass::CODE] = klass } 
-        app_class.new(sdef, signature, hash)
+        app = app_class.__new__('sign', signature.to_4cc)
+        app.instance_variable_set(:@sdef, sdef)
+        app.instance_variable_set(:@classes, hash)
+        app.instance_eval 'def sdef; @sdef; end'
+        app.extend OSA::Application
+        return app
     end
 
     def self.parameter_optional?(element)
@@ -384,7 +378,7 @@ EOC
             end
 
             if inherits.nil?
-                klass = Class.new(real_name == 'application' ? OSA::Application : OSA::Element)
+                klass = OSA::Element
             else
                 super_element = class_elements[inherits]
                 if super_element.nil?
@@ -396,6 +390,8 @@ EOC
                     klass = Class.new(super_class)
                 end
             end
+            
+            klass.class_eval 'include OSA::Application' if real_name == 'application'
             
             klass.class_eval <<-EOC 
                 REAL_NAME = '#{real_name}' unless const_defined?(:REAL_NAME)

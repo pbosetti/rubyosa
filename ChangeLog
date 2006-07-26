@@ -1,3 +1,13 @@
+2006-07-26  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* src/rbosa.c, src/rbosa_sdef.c, src/lib/rbosa.rb:
+	- The application class does not inherit from OSA::Application anymore,
+	  as in some sdef it inherits from another class. OSA::Application has
+	  been transformed as a module and is mixed in the class instead ;
+	- Fixed the sdef retrieval method to generate a Ruby string with the
+	  exact length of the given data, to avoid garbage at the end of the XML
+	  definition that can sometimes make REXML a bit nervous.
+
 2006-07-23  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/lib/rbosa.rb:

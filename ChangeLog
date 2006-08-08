@@ -1,3 +1,9 @@
+2006-08-08  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* src/rbosa_conv.c:
+	Raise an exception if an URL could not be created with the given file
+	path (reported by Michael Pruett).
+
 2006-07-26  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/rbosa.c, src/rbosa_sdef.c, src/lib/rbosa.rb:

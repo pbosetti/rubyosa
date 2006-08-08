@@ -80,6 +80,8 @@ rbobj_to_alias_handle (VALUE obj, AliasHandle *alias)
                                                    RSTRING (obj)->len,
                                                    0 /* XXX: normally passing 0 even if it's a directory should
                                                         not hurt, as we are just getting the FSRef. */); 
+    if (URL == NULL)
+        rb_raise (rb_eArgError, "Invalid path given");
     ok = CFURLGetFSRef (URL, &ref);
     CFRelease (URL);
     if (ok) {

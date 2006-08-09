@@ -1,5 +1,14 @@
 2006-08-08  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* src/lib/rbosa.rb:
+	Cache the application objects so that we never create them more than once.
+
+	* src/rbosa_sdef.c:
+	Fixed the OSA.app_with_signature() method.
+
+	* tests/tc_get_app.rb, tests/testall.rb:
+	Added some test cases.
+
 	* src/rbosa_conv.c:
 	Raise an exception if an URL could not be created with the given file
 	path (reported by Michael Pruett).

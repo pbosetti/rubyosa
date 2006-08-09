@@ -41,7 +41,7 @@ rbosa_app_name_signature (CFURLRef URL, VALUE *name, VALUE *signature)
     bundle = CFBundleCreate (kCFAllocatorDefault, URL);
     info = CFBundleGetInfoDictionary (bundle);
     
-    if (NIL_P(*signature)) {
+    if (NIL_P(*name)) {
         str = CFDictionaryGetValue (info, CFSTR ("CFBundleName"));
         *name = str != NULL ? CSTR2RVAL (CFStringGetCStringPtr (str, CFStringGetFastestEncoding (str))) : Qnil;
     }
@@ -65,7 +65,7 @@ rbosa_translate_app (VALUE criterion, VALUE value, VALUE *app_signature, VALUE *
  
     if (criterion == ID2SYM (rb_intern ("by_signature"))) {
         *app_signature = value;
-        err = LSFindApplicationForInfo (*(FourCharCode*)RVAL2CSTR (value), NULL, NULL, fs_ref, &URL);
+        err = LSFindApplicationForInfo (RVAL2FOURCHAR (value), NULL, NULL, fs_ref, &URL);
     }
     else { 
         CFMutableStringRef  str;

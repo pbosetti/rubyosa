@@ -133,6 +133,9 @@ module OSA
     #######
 
     def self.app(name, signature, sdef)
+        @apps ||= {}
+        app = @apps[signature]
+        return app if app
         doc = REXML::Document.new(sdef)
 
         # Creates a module for this app, we will define the scripting interface within it.
@@ -355,7 +358,7 @@ EOC
         app.instance_variable_set(:@classes, hash)
         app.instance_eval 'def sdef; @sdef; end'
         app.extend OSA::Application
-        return app
+        @apps[signature] = app
     end
 
     def self.parameter_optional?(element)

@@ -366,5 +366,5 @@ Init_osa (void)
     rb_define_alias (cOSAElementList, "length", "size");
 
     mOSAApplication = rb_define_module_under (mOSA, "Application");
-    rb_define_method/*_module_function*/ (mOSAApplication, "__send_event__", rbosa_app_send_event, 4);
+    rb_define_method (mOSAApplication, "__send_event__", rbosa_app_send_event, 4);
 }

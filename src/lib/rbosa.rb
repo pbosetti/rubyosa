@@ -381,7 +381,7 @@ EOC
             end
 
             if inherits.nil?
-                klass = OSA::Element
+                klass = Class.new(OSA::Element)
             else
                 super_element = class_elements[inherits]
                 if super_element.nil?

@@ -9,6 +9,9 @@
 	  classes can be defined within multiple suites) ;
 	- Use Module#const_set instead of costly evals to define constants.
 
+	* sample/QT_playall.rb:
+	Added new sample.
+
 2006-08-22  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* AUTHORS:

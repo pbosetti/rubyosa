@@ -109,8 +109,7 @@ rbosa_element_make (VALUE klass, AEDesc *desc, VALUE app)
 
     obj = Data_Wrap_Struct (klass, NULL, rbosa_element_free, newDesc);
 
-    if (!NIL_P (app))
-        rb_ivar_set (obj, sApp, app);
+    rb_ivar_set (obj, sApp, NIL_P (app) ? obj : app);
 
     return obj;
 }

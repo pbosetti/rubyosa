@@ -172,7 +172,6 @@ module OSA
         end
         class_elements.values.flatten.each do |element| 
             klass = add_class_from_xml_element(element, class_elements, classes, app_module)
-            is_app = klass.ancestors.include?(OSA::Application)
             
             # Creates properties. 
             element.elements.each('property') do |pelement|
@@ -192,8 +191,8 @@ module OSA
 
                 method_code = <<EOC
 def #{rubyfy_method(name, type)}
-    #{is_app ? "self" : "@app"}.__send_event__('core', 'getd', 
-        [['----', Element.__new_object_specifier__('prop', #{is_app ? "Element.__new__('null', nil)" : "self"}, 
+    @app.__send_event__('core', 'getd', 
+        [['----', Element.__new_object_specifier__('prop', @app == self ? Element.__new__('null', nil) : self, 
                                                    'prop', Element.__new__('type', '#{code}'.to_4cc))]],
         true).to_rbobj
 end
@@ -204,8 +203,8 @@ EOC
                 if setter
                     method_code = <<EOC
 def #{rubyfy_method(name, type, true)}=(val)
-    #{is_app ? "self" : "@app"}.__send_event__('core', 'setd', 
-        [['----', Element.__new_object_specifier__('prop', #{is_app ? "Element.__new__('null', nil)" : "self"}, 
+    @app.__send_event__('core', 'setd', 
+        [['----', Element.__new_object_specifier__('prop', @app == self ? Element.__new__('null', nil) : self, 
                                                    'prop', Element.__new__('type', '#{code}'.to_4cc))],
          ['data', #{new_element_code(type, 'val', enum_group_codes)}]],
         true).to_rbobj
@@ -235,8 +234,8 @@ EOC
 
                 method_code = <<EOC
 def #{rubyfy_method(eklass::PLURAL)}
-    #{is_app ? "self" : "@app"}.__send_event__('core', 'getd', 
-        [['----', Element.__new_object_specifier__('#{eklass::CODE}', #{is_app ? "Element.__new__('null', nil)" : "self"}, 
+    @app.__send_event__('core', 'getd', 
+        [['----', Element.__new_object_specifier__('#{eklass::CODE}', @app == self ? Element.__new__('null', nil) : self, 
                                                    'indx', Element.__new__('abso', 'all '.to_4cc))]],
         true).to_rbobj
 end
@@ -329,7 +328,7 @@ EOC
 
             method_code = <<EOC
 def %METHOD_NAME%(#{p_dec.join(', ')})
-  %RECEIVER%.__send_event__('#{code[0..3]}', '#{code[4..-1]}', [#{p_def.join(', ')}], #{result != nil})#{result != nil ? '.to_rbobj' : ''}
+  @app.__send_event__('#{code[0..3]}', '#{code[4..-1]}', [#{p_def.join(', ')}], #{result != nil})#{result != nil ? '.to_rbobj' : ''}
 end
 EOC
 
@@ -339,8 +338,7 @@ EOC
                     STDERR.puts "Method `#{method_name}' already defined in `#{klass}', skipping" if $VERBOSE
                     next
                 end
-                is_app = klass.ancestors.include?(OSA::Application) 
-                code = method_code.sub(/%RECEIVER%/, is_app ? 'self' : '@app').sub(/%METHOD_NAME%/, method_name)
+                code = method_code.sub(/%METHOD_NAME%/, method_name)
                 klass.class_eval(code)
             end
         end

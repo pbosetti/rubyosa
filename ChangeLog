@@ -1,3 +1,9 @@
+2006-08-22  Vincent Isambart  <vincent.isambart@gmail.com>
+
+	* src/lib/rbosa.rb, src/rbosa.c:
+	Set the @app instance variable to self for application instances,
+	and cleanup the generated methods code logic to always use it.
+
 2006-08-22  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/lib/rbosa.rb:

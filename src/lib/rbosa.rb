@@ -421,7 +421,7 @@ EOC
                 "(#{varname} ? 'true'.to_4cc : 'fals'.to_4cc), nil"
             when 'string', 'text', 'Unicode text'
                 "'TEXT', #{varname}.to_s"
-            when 'alias'
+            when 'alias', 'file'
                 "'alis', #{varname}.to_s"    
             when 'integer', 'double integer'
                 "'magn', [#{varname}].pack('l')"

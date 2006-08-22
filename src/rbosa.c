@@ -31,6 +31,7 @@
 static VALUE mOSA;
 static VALUE cOSAElement;
 static VALUE cOSAElementList;
+static VALUE cOSAElementRecord;
 static VALUE mOSAApplication;
 
 static ID sClasses;
@@ -44,13 +45,51 @@ rbosa_element_free (void *ptr)
 }
 
 static VALUE
+__rbosa_class_from_desc_data (VALUE app, AEDesc res)
+{
+    char *  data;
+    Size    datasize;
+    VALUE   classes, klass; 
+ 
+    classes = rb_ivar_get (app, sClasses);
+    if (NIL_P (classes))
+        return Qnil;
+    klass = Qnil;
+
+    datasize = AEGetDescDataSize (&res);
+    data = (void *)malloc (datasize);
+    
+    if (AEGetDescData (&res, data, datasize) == noErr) {
+        char *p;
+#if defined(__LITTLE_ENDIAN__)
+        char b[5];
+        b[0] = data[3];
+        b[1] = data[2];
+        b[2] = data[1];
+        b[3] = data[0];
+        p = b;
+#else
+        p = data;
+#endif
+        if (datasize > 3)
+            p[4] = '\0';
+        klass = rb_hash_aref (classes, CSTR2RVAL (p));
+    }
+
+    free (data);
+
+    return klass;
+}
+
+static VALUE
 rbosa_element_make (VALUE klass, AEDesc *desc, VALUE app)
 {
     AEDesc *    newDesc;
-    VALUE       obj;
+    VALUE       new_klass, obj;
 
     newDesc = (AEDesc *)malloc (sizeof (AEDesc));
     memcpy (newDesc, desc, sizeof (AEDesc));
+    new_klass = Qnil;
 
     /* Let's replace the klass here according to the type of the descriptor,
      * if the basic class OSA::Element was given.
@@ -64,49 +103,24 @@ rbosa_element_make (VALUE klass, AEDesc *desc, VALUE app)
         if (strcmp (dtStr, "list") == 0) {
             klass = cOSAElementList;
         }
+        else if (strcmp (dtStr, "reco") == 0) {
+            klass = cOSAElementRecord;
+        }
+        else if (strcmp (dtStr, "type") == 0) {
+            new_klass = __rbosa_class_from_desc_data (app, *newDesc);
+        }
         else if (strcmp (dtStr, "obj ") == 0 && !NIL_P (app)) {
-            VALUE   classes;
-            VALUE   new_klass;        
+            AEDesc  res;
+            OSErr   err;
 
-            classes = rb_ivar_get (app, sClasses);
-            new_klass = rb_hash_aref (classes, CSTR2RVAL (dtStr));
-            if (NIL_P (new_klass)) {
-                AEDesc  res;
-                OSErr   err;
-
-                if ((err = AEGetParamDesc ((AppleEvent *)newDesc, 'want', '****', &res)) == noErr) {
-                    char *data;
-                    Size datasize;
-                    
-                    datasize = AEGetDescDataSize (&res);
-                    data = (void *)malloc (datasize);
-                  
-                    if (AEGetDescData (&res, data, datasize) == noErr) {
-                        char *p;
-#if defined(__LITTLE_ENDIAN__)
-                        char b[5];
-                        b[0] = data[3];
-                        b[1] = data[2];
-                        b[2] = data[1];
-                        b[3] = data[0];
-                        p = b;
-#else
-                        p = data;
-#endif
-                        if (datasize > 3)
-                            p[4] = '\0';
-                        new_klass = rb_hash_aref (classes, CSTR2RVAL (p));
-                    }
-
-                    free (data);
-                }
-            }
-
-            if (!NIL_P (new_klass))
-                klass = new_klass; 
+            if ((err = AEGetParamDesc ((AppleEvent *)newDesc, 'want', '****', &res)) == noErr)
+                new_klass = __rbosa_class_from_desc_data (app, res);
         }
     }
 
+    if (!NIL_P (new_klass))
+        klass = new_klass; 
+    
     obj = Data_Wrap_Struct (klass, NULL, rbosa_element_free, newDesc);
 
     rb_ivar_set (obj, sApp, NIL_P (app) ? obj : app);
@@ -309,23 +323,29 @@ rbosa_element_data (int argc, VALUE *argv, VALUE self)
 }
 
 static VALUE
-rbosa_elementlist_get (VALUE self, VALUE index)
+__rbosa_elementlist_get (VALUE self, long index, AEKeyword *keyword)
 {
     OSErr       error;
     AEDesc      desc;
-    AEKeyword   keyword;
 
     error = AEGetNthDesc ((AEDescList *)rbosa_element_aedesc (self),
-                          FIX2INT (index) + 1,
+                          index + 1,
                           typeWildCard,
-                          &keyword,
+                          keyword,
                           &desc);
     
     if (error != noErr)
         rb_raise (rb_eRuntimeError, "Cannot get desc at index %d : %s (%d)", 
-                  FIX2INT (index), GetMacOSStatusErrorString (error), error);
+                  index, GetMacOSStatusErrorString (error), error);
 
     return rbosa_element_make (cOSAElement, &desc, rb_ivar_get (self, sApp));
+}
+
+static VALUE
+rbosa_elementlist_get (VALUE self, VALUE index)
+{
+    AEKeyword   keyword;
+    return __rbosa_elementlist_get (self, FIX2INT (index), &keyword);
 }
 
 static VALUE
@@ -341,6 +361,28 @@ rbosa_elementlist_size (VALUE self)
                   GetMacOSStatusErrorString (error), error);
 
     return INT2FIX (count);
+}
+
+static VALUE
+rbosa_elementrecord_to_a (VALUE self)
+{
+    long    i, count;
+    VALUE   ary;
+
+    count = FIX2INT (rbosa_elementlist_size (self));
+    ary = rb_ary_new ();
+    for (i = 0; i < count; i++) {
+        AEKeyword   keyword;
+        char        keyStr[5];
+        VALUE       val;
+
+        val = __rbosa_elementlist_get (self, i, &keyword);
+        *(AEKeyword *)keyStr = CFSwapInt32HostToBig (keyword);
+        keyStr[4] = '\0';
+        rb_ary_push (ary, rb_ary_new3 (2, CSTR2RVAL (keyStr), val));
+    }
+
+    return ary;
 }
 
 void
@@ -363,6 +405,9 @@ Init_osa (void)
     rb_define_method (cOSAElementList, "[]", rbosa_elementlist_get, 1);
     rb_define_method (cOSAElementList, "size", rbosa_elementlist_size, 0);
     rb_define_alias (cOSAElementList, "length", "size");
+
+    cOSAElementRecord = rb_define_class_under (mOSA, "ElementRecord", cOSAElement);
+    rb_define_method (cOSAElementRecord, "to_a", rbosa_elementrecord_to_a, 0);
 
     mOSAApplication = rb_define_module_under (mOSA, "Application");
     rb_define_method (mOSAApplication, "__send_event__", rbosa_app_send_event, 4);

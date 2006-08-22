@@ -94,6 +94,9 @@ class OSA::Element
             # Array.
             when 'list'
                 is_a?(OSA::ElementList) ? to_a.map { |x| x.to_rbobj } : self
+            # Hash.
+            when 'reco'
+                is_a?(OSA::ElementRecord) ? to_hash : self
             # Enumerator.
             when 'enum'
                 OSA::Enumerator.enum_for_code(__data__('TEXT')) or self
@@ -108,6 +111,14 @@ class OSA::ElementList
     include Enumerable
     def each
         self.size.times { |i| yield(self[i]) }
+    end
+end
+
+class OSA::ElementRecord
+    def to_hash
+        h = {}
+        self.to_a.each { |key, val| h[key] = val.to_rbobj }
+        return h
     end
 end
 

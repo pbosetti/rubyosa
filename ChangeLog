@@ -1,3 +1,10 @@
+2006-08-22  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* src/lib/rbosa.rb, src/rbosa.c:
+	- Added support for 'reco' types, that are now translated into
+	  Ruby Hash objects ;
+	- Convert 'type' types to real generated classes (if possible).
+
 2006-08-22  Vincent Isambart  <vincent.isambart@gmail.com>
 
 	* src/lib/rbosa.rb, src/rbosa.c:

@@ -1,3 +1,14 @@
+2006-08-22  Vincent Isambart  <vincent.isambart@gmail.com>
+
+	* src/lib/rbosa.rb:
+	- Map '-', '/' and '.' to underscores, and '&' to 'and' when rubyfy'ing 
+	  strings (Finder and QuickTime do have these characters) ; 
+	- Ignore commands whose names contain 'NOT AVAILABLE' (Finder on Tiger 
+	  has some) ; 
+	- When creating classes, make sure we iterate on all elements (as some
+	  classes can be defined within multiple suites) ;
+	- Use Module#const_set instead of costly evals to define constants.
+
 2006-08-22  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* AUTHORS:

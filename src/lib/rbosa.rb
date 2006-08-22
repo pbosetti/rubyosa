@@ -140,9 +140,7 @@ module OSA
 
         # Creates a module for this app, we will define the scripting interface within it.
         app_module = Module.new
-        self.module_eval <<-EOC
-            #{rubyfy_constant_string(name)} = app_module
-        EOC
+        self.const_set(rubyfy_constant_string(name), app_module)
 
         # Retrieves and creates enumerations.
         enum_group_codes = []
@@ -160,23 +158,19 @@ module OSA
 
                 enum = OSA::Enumerator.new(enum_const, name, enum_code, enum_group_code)
 
-                enum_module.module_eval <<-EOC
-                    #{enum_name} = enum    
-                EOC
+                enum_module.const_set(enum_name, enum)
             end
  
-            app_module.module_eval <<-EOC 
-                #{enum_module_name} = enum_module
-            EOC
+            app_module.const_set(enum_module_name, enum_module)
         end
 
         # Retrieves and creates classes.
         classes = {}
         class_elements = {}
         doc.elements.each('/dictionary/suite/class') do |element|
-            class_elements[element.attributes['name']] = element
+            (class_elements[element.attributes['name']] ||= []) << element
         end
-        class_elements.each_value do |element| 
+        class_elements.values.flatten.each do |element| 
             klass = add_class_from_xml_element(element, class_elements, classes, app_module)
             is_app = klass.ancestors.include?(OSA::Application)
             
@@ -190,9 +184,9 @@ module OSA
 
                 pklass = classes[type]
                 if pklass.nil?
-                    pklass_element = class_elements[type]
-                    unless pklass_element.nil?
-                        pklass = add_class_from_xml_element(pklass_element, class_elements, classes, app_module)
+                    pklass_elements = class_elements[type]
+                    unless pklass_elements.nil?
+                        pklass = add_class_from_xml_element(pklass_elements.first, class_elements, classes, app_module)
                     end
                 end 
 
@@ -228,9 +222,9 @@ EOC
                 
                 eklass = classes[type]
                 if eklass.nil?
-                    eklass_element = class_elements[type]
-                    unless eklass_element.nil?
-                        eklass = add_class_from_xml_element(eklass_element, class_elements, classes, app_module)
+                    eklass_elements = class_elements[type]
+                    unless eklass_elements.nil?
+                        eklass = add_class_from_xml_element(eklass_elements.first, class_elements, classes, app_module)
                     end
                 end 
 
@@ -260,6 +254,7 @@ EOC
         all_classes_but_app = classes.values.reject { |x| x.ancestors.include?(OSA::Application) }
         doc.elements.each('/dictionary/suite/command') do |element|
             name = element.attributes['name']
+            next if /NOT AVAILABLE/.match(name) # Finder's sdef (Tiger) names some commands with this 'tag'.
             code = element.attributes['code']
             direct_parameter = element.elements['direct-parameter']
             result = element.elements['result']           
@@ -383,28 +378,24 @@ EOC
             if inherits.nil?
                 klass = Class.new(OSA::Element)
             else
-                super_element = class_elements[inherits]
-                if super_element.nil?
+                super_elements = class_elements[inherits]
+                if super_elements.nil?
                     STDERR.puts "sdef bug: class #{real_name} inherits from #{inherits} which is not defined - fall back inheriting from OSA::Element"
                     klass = OSA::Element
                 else
-                    super_class = add_class_from_xml_element(super_element, class_elements, 
+                    super_class = add_class_from_xml_element(super_elements.first, class_elements, 
                                                              repository, app_module)
                     klass = Class.new(super_class)
                 end
             end
-            
+           
             klass.class_eval 'include OSA::Application' if real_name == 'application'
-            
-            klass.class_eval <<-EOC 
-                REAL_NAME = '#{real_name}' unless const_defined?(:REAL_NAME)
-                PLURAL = '#{plural == nil ? real_name + 's' : plural}' unless const_defined?(:PLURAL)
-                CODE = '#{code}' unless const_defined?(:CODE)
-            EOC
 
-            app_module.module_eval <<-EOC 
-                #{rubyfy_constant_string(real_name)} = klass
-            EOC
+            klass.const_set(:REAL_NAME, real_name) unless klass.const_defined?(:REAL_NAME)
+            klass.const_set(:PLURAL, plural == nil ? real_name + 's' : plural) unless klass.const_defined?(:PLURAL)
+            klass.const_set(:CODE, code) unless klass.const_defined?(:CODE)
+            
+            app_module.const_set(rubyfy_constant_string(real_name), klass)
 
             repository[real_name] = klass
         end 
@@ -452,7 +443,7 @@ EOC
     end
 
     def self.rubyfy_string(string)
-        string.gsub(/\s/, '_')
+        string.gsub(/[\s\-\.\/]/, '_').gsub(/&/, 'and')
     end
     
     def self.rubyfy_method(string, return_type=nil, setter=false)

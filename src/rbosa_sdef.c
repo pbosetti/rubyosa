@@ -43,6 +43,10 @@ rbosa_app_name_signature (CFURLRef URL, VALUE *name, VALUE *signature)
     
     if (NIL_P(*name)) {
         str = CFDictionaryGetValue (info, CFSTR ("CFBundleName"));
+        if (str == NULL) {
+            /* Try 'CFBundleExecutable' if 'CFBundleName' does not exist (which is a bug). */
+            str = CFDictionaryGetValue (info, CFSTR ("CFBundleExecutable"));
+        }
         *name = str != NULL ? CSTR2RVAL (CFStringGetCStringPtr (str, CFStringGetFastestEncoding (str))) : Qnil;
     }
     if (NIL_P(*signature)) {
@@ -64,8 +68,8 @@ rbosa_translate_app (VALUE criterion, VALUE value, VALUE *app_signature, VALUE *
     err = noErr;
  
     if (criterion == ID2SYM (rb_intern ("by_signature"))) {
-        *app_signature = value;
         err = LSFindApplicationForInfo (RVAL2FOURCHAR (value), NULL, NULL, fs_ref, &URL);
+        *app_signature = value; /* Don't need to get the app signature, we already have it. */
     }
     else { 
         CFMutableStringRef  str;
@@ -87,6 +91,7 @@ rbosa_translate_app (VALUE criterion, VALUE value, VALUE *app_signature, VALUE *
                 CFStringAppend (str, dot_app);
    
             err = LSFindApplicationForInfo (kLSUnknownCreator, NULL, str, fs_ref, &URL);
+            *app_name = value; /* Don't need to get the app name, we already have it. */
         }
         else if (criterion == ID2SYM (rb_intern ("by_bundle_id"))) {
             err = LSFindApplicationForInfo (kLSUnknownCreator, str, NULL, fs_ref, &URL);

@@ -1,7 +1,13 @@
 2006-08-22  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/lib/rbosa.rb:
-	- Handle 'file' element types as aliases.
+	Handle 'file' element types as aliases.
+
+	* src/rbosa_sdef.c:
+	- Don't try to get the app name when OSA.app_with_name() was called,
+	  as we already have it ;
+	- When trying to get the app name, if CFBundleName does not exist in
+	  the Info.plist file, try for CFBundleExecutable.
 
 2006-08-22  Vincent Isambart  <vincent.isambart@gmail.com>
 

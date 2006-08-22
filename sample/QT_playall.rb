@@ -2,7 +2,7 @@
 
 require 'rbosa'
 
-if ARGV.empty
+if ARGV.empty?
     STDERR.puts "Usage: #{$0} <movies-files>"
     exit 1
 end

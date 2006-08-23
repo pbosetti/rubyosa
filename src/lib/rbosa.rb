@@ -431,7 +431,8 @@ EOC
             when 'string', 'text', 'Unicode text'
                 "'TEXT', #{varname}.to_s"
             when 'alias', 'file'
-                "'alis', #{varname}.to_s"    
+                # Let's use the 'furl' type here instead of 'alis', as we don't have a way to produce an alias for a file that does not exist yet.
+                "'furl', #{varname}.to_s"    
             when 'integer', 'double integer'
                 "'magn', [#{varname}].pack('l')"
             else

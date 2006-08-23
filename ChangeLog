@@ -1,3 +1,10 @@
+2006-08-23  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* src/lib/rbosa.rb:
+	When converting to alias or file types, provide a 'furl' 
+	descriptor instead of an 'alis' one, as we don't have a way
+	to create an alias for a file that does not exist yet.
+
 2006-08-22  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/lib/rbosa.rb, src/rbosa.c:

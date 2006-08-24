@@ -430,7 +430,7 @@ EOC
         code << case type
             when 'boolean'
                 "(#{varname} ? 'true'.to_4cc : 'fals'.to_4cc), nil"
-            when 'string', 'Unicode text'
+            when 'string', 'text', 'Unicode text'
                 "'TEXT', #{varname}.to_s"
             when 'alias', 'file'
                 # Let's use the 'furl' type here instead of 'alis', as we don't have a way to produce an alias for a file that does not exist yet.

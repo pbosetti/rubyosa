@@ -47,7 +47,7 @@ rbosa_element_free (void *ptr)
 static VALUE
 __rbosa_class_from_desc_data (VALUE app, AEDesc res)
 {
-    DescType *  data;
+    DescType    data;
     Size        datasize;
     VALUE       classes, klass; 
  
@@ -58,22 +58,15 @@ __rbosa_class_from_desc_data (VALUE app, AEDesc res)
 
     datasize = AEGetDescDataSize (&res);
     /* This should always be a four-byte code. */
-    if (datasize != 4)
+    if (datasize != sizeof (DescType))
         return Qnil;
 
-    data = (DescType *)malloc (datasize);
-    if (data == NULL)
-        rb_fatal ("cannot allocate memory");
-
-    if (AEGetDescData (&res, data, datasize) == noErr) {
+    if (AEGetDescData (&res, &data, datasize) == noErr) {
         char dtStr[5];
         
-        *(DescType *)dtStr = CFSwapInt32HostToBig (*data);
-        dtStr[4] = '\0';
-        klass = rb_hash_aref (classes, CSTR2RVAL (dtStr));
+        *(DescType *)dtStr = CFSwapInt32HostToBig (data);
+        klass = rb_hash_aref (classes, rb_str_new (dtStr, 4));
     }
-
-    free (data);
 
     return klass;
 }
@@ -94,21 +87,16 @@ rbosa_element_make (VALUE klass, AEDesc *desc, VALUE app)
      * if the basic class OSA::Element was given.
      */
     if (klass == cOSAElement) {
-        char    dtStr[5];
-    
-        *(DescType*)dtStr = CFSwapInt32HostToBig (newDesc->descriptorType);
-        dtStr[4] = '\0';
-
-        if (strcmp (dtStr, "list") == 0) {
+        if (newDesc->descriptorType == 'list') {
             klass = cOSAElementList;
         }
-        else if (strcmp (dtStr, "reco") == 0) {
+        else if (newDesc->descriptorType == 'reco') {
             klass = cOSAElementRecord;
         }
-        else if (strcmp (dtStr, "type") == 0) {
+        else if (newDesc->descriptorType == 'type') {
             new_klass = __rbosa_class_from_desc_data (app, *newDesc);
         }
-        else if (strcmp (dtStr, "obj ") == 0 && !NIL_P (app)) {
+        else if (newDesc->descriptorType == 'obj ') {
             AEDesc  res;
             OSErr   err;
 
@@ -275,9 +263,8 @@ rbosa_element_type (VALUE self)
 
     desc = rbosa_element_aedesc (self);
     *(DescType*)dtStr = CFSwapInt32HostToBig (desc->descriptorType);
-    dtStr[4] = '\0';
 
-    return CSTR2RVAL (dtStr);
+    return rb_str_new (dtStr, 4);
 }
 
 static VALUE

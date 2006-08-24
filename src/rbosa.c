@@ -134,7 +134,7 @@ rbosa_element_aedesc (VALUE element)
     AEDesc *    desc;
 
     if (!rb_obj_is_kind_of (element, cOSAElement))
-        rb_raise (rb_eArgError, "Invalid argument of type '%s' (required: OSA::Element)", rb_class2name (element));
+        rb_raise (rb_eArgError, "Invalid argument of type '%s' (required: OSA::Element)", rb_class2name (rb_class_of (element)));
 
     Data_Get_Struct (element, AEDesc, desc);
  
@@ -385,6 +385,51 @@ rbosa_elementrecord_to_a (VALUE self)
     return ary;
 }
 
+static VALUE
+rbosa_element_eql (VALUE self, VALUE other)
+{
+    AEDesc *    self_desc;
+    AEDesc *    other_desc; 
+    Size        data_size;
+    void *      self_data;
+    void *      other_data;
+    OSErr       error;
+    bool        ok;
+
+    if (!rb_obj_is_kind_of (other, rb_class_of (self)))
+        return Qfalse;
+
+    self_desc = rbosa_element_aedesc (self);
+    other_desc = rbosa_element_aedesc (other);
+
+    if (self_desc == other_desc)
+        return Qtrue;
+
+    data_size = AEGetDescDataSize (self_desc);
+    if (data_size != AEGetDescDataSize (other_desc))
+        return Qfalse;
+  
+    self_data = (void *)malloc (data_size);
+    other_data = (void *)malloc (data_size);  
+    ok = 0;
+
+    error = AEGetDescData (self_desc, self_data, data_size);
+    if (error != noErr)
+        goto bails;
+
+    error = AEGetDescData (other_desc, other_data, data_size);
+    if (error != noErr)
+        goto bails;
+    
+    ok = memcmp (self_data, other_data, data_size) == 0;
+
+bails:
+    free (self_data);
+    free (other_data);
+
+    return CBOOL2RVAL (ok);
+}
+
 void
 Init_osa (void)
 {
@@ -400,6 +445,7 @@ Init_osa (void)
     rb_define_singleton_method (cOSAElement, "__new_object_specifier__", rbosa_element_new_os, 4);
     rb_define_method (cOSAElement, "__type__", rbosa_element_type, 0);
     rb_define_method (cOSAElement, "__data__", rbosa_element_data, -1);
+    rb_define_method (cOSAElement, "==", rbosa_element_eql, 1);
 
     cOSAElementList = rb_define_class_under (mOSA, "ElementList", cOSAElement);
     rb_define_method (cOSAElementList, "[]", rbosa_elementlist_get, 1);

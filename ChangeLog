@@ -1,5 +1,8 @@
 2006-08-24  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* src/rbosa.c:
+	Added OSA::Element#==() that compares the descriptors data.
+
 	* src/lib/rbosa.rb:
 	Don't override existing methods, prefixing the generated 
 	method names with 'osa_' when necessary. When mapping the

@@ -58,7 +58,9 @@ __rbosa_class_from_desc_data (VALUE app, AEDesc res)
 
     datasize = AEGetDescDataSize (&res);
     data = (void *)malloc (datasize);
-    
+    if (data == NULL)
+        rb_fatal ("cannot allocate memory");
+ 
     if (AEGetDescData (&res, data, datasize) == noErr) {
         char *p;
 #if defined(__LITTLE_ENDIAN__)
@@ -88,6 +90,8 @@ rbosa_element_make (VALUE klass, AEDesc *desc, VALUE app)
     VALUE       new_klass, obj;
 
     newDesc = (AEDesc *)malloc (sizeof (AEDesc));
+    if (newDesc == NULL)
+        rb_fatal ("cannot allocate memory");
     memcpy (newDesc, desc, sizeof (AEDesc));
     new_klass = Qnil;
 
@@ -307,7 +311,9 @@ rbosa_element_data (int argc, VALUE *argv, VALUE self)
 
     datasize = AEGetDescDataSize (desc);
     data = (void *)malloc (datasize);
-  
+    if (data == NULL) 
+        rb_fatal ("cannot allocate memory");
+ 
     error = AEGetDescData (desc, data, datasize);
     retval = error == noErr ? rb_str_new (data, datasize) : Qnil;
 
@@ -412,6 +418,9 @@ rbosa_element_eql (VALUE self, VALUE other)
     self_data = (void *)malloc (data_size);
     other_data = (void *)malloc (data_size);  
     ok = 0;
+
+    if (self_data == NULL || other_data == NULL)
+        rb_fatal ("cannot allocate memory");
 
     error = AEGetDescData (self_desc, self_data, data_size);
     if (error != noErr)

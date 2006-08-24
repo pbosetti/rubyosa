@@ -1,7 +1,8 @@
 2006-08-24  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/rbosa.c:
-	Added OSA::Element#==() that compares the descriptors data.
+	- Added OSA::Element#==() that compares the descriptors data ;
+    - Make sure we rb_fatal() when we can't allocate memory.
 
 	* src/lib/rbosa.rb:
 	Don't override existing methods, prefixing the generated 

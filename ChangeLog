@@ -2,7 +2,9 @@
 
 	* src/rbosa.c:
 	- Added OSA::Element#==() that compares the descriptors data ;
-    - Make sure we rb_fatal() when we can't allocate memory.
+	- Make sure we rb_fatal() when we can't allocate memory ;
+	- When guessing classes, do some sanity checks before, and 
+	  cleaned the byte swapping part.
 
 	* src/lib/rbosa.rb:
 	Don't override existing methods, prefixing the generated 

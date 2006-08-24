@@ -47,9 +47,9 @@ rbosa_element_free (void *ptr)
 static VALUE
 __rbosa_class_from_desc_data (VALUE app, AEDesc res)
 {
-    char *  data;
-    Size    datasize;
-    VALUE   classes, klass; 
+    DescType *  data;
+    Size        datasize;
+    VALUE       classes, klass; 
  
     classes = rb_ivar_get (app, sClasses);
     if (NIL_P (classes))
@@ -57,25 +57,20 @@ __rbosa_class_from_desc_data (VALUE app, AEDesc res)
     klass = Qnil;
 
     datasize = AEGetDescDataSize (&res);
-    data = (void *)malloc (datasize);
+    /* This should always be a four-byte code. */
+    if (datasize != 4)
+        return Qnil;
+
+    data = (DescType *)malloc (datasize);
     if (data == NULL)
         rb_fatal ("cannot allocate memory");
- 
+
     if (AEGetDescData (&res, data, datasize) == noErr) {
-        char *p;
-#if defined(__LITTLE_ENDIAN__)
-        char b[5];
-        b[0] = data[3];
-        b[1] = data[2];
-        b[2] = data[1];
-        b[3] = data[0];
-        p = b;
-#else
-        p = data;
-#endif
-        if (datasize > 3)
-            p[4] = '\0';
-        klass = rb_hash_aref (classes, CSTR2RVAL (p));
+        char dtStr[5];
+        
+        *(DescType *)dtStr = CFSwapInt32HostToBig (*data);
+        dtStr[4] = '\0';
+        klass = rb_hash_aref (classes, CSTR2RVAL (dtStr));
     }
 
     free (data);

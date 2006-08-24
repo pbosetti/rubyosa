@@ -96,7 +96,7 @@ rbosa_element_make (VALUE klass, AEDesc *desc, VALUE app)
         else if (newDesc->descriptorType == 'type') {
             new_klass = __rbosa_class_from_desc_data (app, *newDesc);
         }
-        else if (newDesc->descriptorType == 'obj ') {
+        else if (newDesc->descriptorType == 'obj ' && !NIL_P (app)) {
             AEDesc  res;
             OSErr   err;
 

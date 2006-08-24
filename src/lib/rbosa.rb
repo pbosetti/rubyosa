@@ -201,7 +201,7 @@ module OSA
                 end 
 
                 method_code = <<EOC
-def #{rubyfy_method(name, type)}
+def #{rubyfy_method(name, klass, type)}
     @app.__send_event__('core', 'getd', 
         [['----', Element.__new_object_specifier__('prop', @app == self ? Element.__new__('null', nil) : self, 
                                                    'prop', Element.__new__('type', '#{code}'.to_4cc))]],
@@ -213,7 +213,7 @@ EOC
 
                 if setter
                     method_code = <<EOC
-def #{rubyfy_method(name, type, true)}=(val)
+def #{rubyfy_method(name, klass, type, true)}(val)
     @app.__send_event__('core', 'setd', 
         [['----', Element.__new_object_specifier__('prop', @app == self ? Element.__new__('null', nil) : self, 
                                                    'prop', Element.__new__('type', '#{code}'.to_4cc))],
@@ -244,7 +244,7 @@ EOC
                 end
 
                 method_code = <<EOC
-def #{rubyfy_method(eklass::PLURAL)}
+def #{rubyfy_method(eklass::PLURAL, klass)}
     @app.__send_event__('core', 'getd', 
         [['----', Element.__new_object_specifier__('#{eklass::CODE}', @app == self ? Element.__new__('null', nil) : self, 
                                                    'indx', Element.__new__('abso', 'all '.to_4cc))]],
@@ -298,8 +298,14 @@ EOC
                 end
             end
 
-            method_name = rubyfy_method(name, (result != nil ? type_of_parameter(result) : nil))
- 
+            # Reject classes which are already represented by an ancestor.
+            if classes_to_define.length > 1
+                classes_to_define.uniq!
+                classes_to_define.reject! do |x|
+                    classes_to_define.any? { |y| x != y and x.ancestors.include?(y) } 
+                end
+            end
+
             params = []
             unless direct_parameter.nil?
                 params << ['direct', 
@@ -344,11 +350,7 @@ end
 EOC
 
             classes_to_define.each do |klass|
-                if klass.method_defined?(name)
-                    # TODO: we should generate the method under another name!
-                    STDERR.puts "Method `#{method_name}' already defined in `#{klass}', skipping" if $VERBOSE
-                    next
-                end
+                method_name = rubyfy_method(name, klass, (result != nil ? type_of_parameter(result) : nil))
                 code = method_code.sub(/%METHOD_NAME%/, method_name)
                 klass.class_eval(code)
             end
@@ -428,7 +430,7 @@ EOC
         code << case type
             when 'boolean'
                 "(#{varname} ? 'true'.to_4cc : 'fals'.to_4cc), nil"
-            when 'string', 'text', 'Unicode text'
+            when 'string', 'Unicode text'
                 "'TEXT', #{varname}.to_s"
             when 'alias', 'file'
                 # Let's use the 'furl' type here instead of 'alis', as we don't have a way to produce an alias for a file that does not exist yet.
@@ -456,11 +458,18 @@ EOC
         string.gsub(/[\s\-\.\/]/, '_').gsub(/&/, 'and')
     end
     
-    def self.rubyfy_method(string, return_type=nil, setter=false)
+    def self.rubyfy_method(string, klass, return_type=nil, setter=false)
         s = rubyfy_string(string) 
-        # Suffix predicates with '?'. 
-        if return_type == 'boolean' and !setter
+        if setter
+            # Suffix setters with '='.
+            s << '='
+        elsif return_type == 'boolean'
+            # Suffix predicates with '?'. 
             s << '?'
+        end
+        # Prefix with 'osa_' in case the class already has a method with such a name.
+        if klass.method_defined?(s)
+            s = 'osa_' + s
         end
         return s
     end

@@ -129,6 +129,8 @@ module OSA::ObjectSpecifier
 end
 
 class OSA::ObjectSpecifierList
+    include Enumerable
+    
     def initialize(app, desired_class, container)
         @app, @desired_class, @container = app, desired_class, container
     end

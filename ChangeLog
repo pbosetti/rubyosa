@@ -1,6 +1,12 @@
 2006-08-24  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/rbosa.c:
+	Added OSA::Element#inspect that prints the contents of the
+	embedded descriptor.
+
+2006-08-24  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* src/rbosa.c:
 	- Added OSA::Element#==() that compares the descriptors data ;
 	- Make sure we rb_fatal() when we can't allocate memory ;
 	- When guessing classes, do some sanity checks before, and 

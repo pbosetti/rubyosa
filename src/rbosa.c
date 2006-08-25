@@ -311,6 +311,72 @@ rbosa_element_data (int argc, VALUE *argv, VALUE self)
 }
 
 static VALUE
+rbosa_element_eql (VALUE self, VALUE other)
+{
+    AEDesc *    self_desc;
+    AEDesc *    other_desc; 
+    Size        data_size;
+    void *      self_data;
+    void *      other_data;
+    OSErr       error;
+    bool        ok;
+
+    if (!rb_obj_is_kind_of (other, rb_class_of (self)))
+        return Qfalse;
+
+    self_desc = rbosa_element_aedesc (self);
+    other_desc = rbosa_element_aedesc (other);
+
+    if (self_desc == other_desc)
+        return Qtrue;
+
+    data_size = AEGetDescDataSize (self_desc);
+    if (data_size != AEGetDescDataSize (other_desc))
+        return Qfalse;
+  
+    self_data = (void *)malloc (data_size);
+    other_data = (void *)malloc (data_size);  
+    ok = 0;
+
+    if (self_data == NULL || other_data == NULL)
+        rb_fatal ("cannot allocate memory");
+
+    error = AEGetDescData (self_desc, self_data, data_size);
+    if (error != noErr)
+        goto bails;
+
+    error = AEGetDescData (other_desc, other_data, data_size);
+    if (error != noErr)
+        goto bails;
+    
+    ok = memcmp (self_data, other_data, data_size) == 0;
+
+bails:
+    free (self_data);
+    free (other_data);
+
+    return CBOOL2RVAL (ok);
+}
+
+static VALUE
+rbosa_element_inspect (VALUE self)
+{
+    Handle  h;
+    VALUE   s;
+    char    buf[1024];
+
+    s = rb_call_super (0, NULL);
+    if (AEPrintDescToHandle (rbosa_element_aedesc (self), &h) != noErr)
+        return s;
+    
+    RSTRING(s)->ptr[RSTRING(s)->len - 1] = '\0';
+    snprintf (buf, sizeof buf, "%s aedesc=\"%s\">", RSTRING(s)->ptr, *h);
+    DisposeHandle (h);
+
+    return CSTR2RVAL (buf);
+}
+
+static VALUE
 __rbosa_elementlist_get (VALUE self, long index, AEKeyword *keyword)
 {
     OSErr       error;
@@ -373,54 +439,6 @@ rbosa_elementrecord_to_a (VALUE self)
     return ary;
 }
 
-static VALUE
-rbosa_element_eql (VALUE self, VALUE other)
-{
-    AEDesc *    self_desc;
-    AEDesc *    other_desc; 
-    Size        data_size;
-    void *      self_data;
-    void *      other_data;
-    OSErr       error;
-    bool        ok;
-
-    if (!rb_obj_is_kind_of (other, rb_class_of (self)))
-        return Qfalse;
-
-    self_desc = rbosa_element_aedesc (self);
-    other_desc = rbosa_element_aedesc (other);
-
-    if (self_desc == other_desc)
-        return Qtrue;
-
-    data_size = AEGetDescDataSize (self_desc);
-    if (data_size != AEGetDescDataSize (other_desc))
-        return Qfalse;
-  
-    self_data = (void *)malloc (data_size);
-    other_data = (void *)malloc (data_size);  
-    ok = 0;
-
-    if (self_data == NULL || other_data == NULL)
-        rb_fatal ("cannot allocate memory");
-
-    error = AEGetDescData (self_desc, self_data, data_size);
-    if (error != noErr)
-        goto bails;
-
-    error = AEGetDescData (other_desc, other_data, data_size);
-    if (error != noErr)
-        goto bails;
-    
-    ok = memcmp (self_data, other_data, data_size) == 0;
-
-bails:
-    free (self_data);
-    free (other_data);
-
-    return CBOOL2RVAL (ok);
-}
-
 void
 Init_osa (void)
 {
@@ -437,6 +455,7 @@ Init_osa (void)
     rb_define_method (cOSAElement, "__type__", rbosa_element_type, 0);
     rb_define_method (cOSAElement, "__data__", rbosa_element_data, -1);
     rb_define_method (cOSAElement, "==", rbosa_element_eql, 1);
+    rb_define_method (cOSAElement, "inspect", rbosa_element_inspect, 0);
 
     cOSAElementList = rb_define_class_under (mOSA, "ElementList", cOSAElement);
     rb_define_method (cOSAElementList, "[]", rbosa_elementlist_get, 1);

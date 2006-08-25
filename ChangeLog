@@ -113,7 +113,7 @@
 
 	* src/lib/rbosa.rb:
 	- Map direct-specifier-optional commands to the application class ;
-    - Do not override methods if they are already defined.
+	- Do not override methods if they are already defined.
 
     * sample/iTunes_fade_volume.rb:
 	Fixed the iTunes_fade_volume.rb sample to call app#play ;

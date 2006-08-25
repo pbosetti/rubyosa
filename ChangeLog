@@ -1,5 +1,12 @@
 2006-08-24  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* src/lib/rbosa.rb:
+	Big change: try to minimize the send of apple events. We won't
+	implicitly resolve object specifiers unless 1) a command is
+	messaged 2) a primitive type (which is not defined in the sdef)
+	is get 3) a property setter is messaged and 4) you explicitly
+	call the #get method on the object. 
+
 	* src/rbosa.c:
 	Added OSA::Element#inspect that prints the contents of the
 	embedded descriptor.

@@ -122,6 +122,54 @@ class OSA::ElementRecord
     end
 end
 
+module OSA::ObjectSpecifier
+    def get
+        @app.__send_event__('core', 'getd', [['----', self]], true).to_rbobj
+    end
+end
+
+class OSA::ObjectSpecifierList
+    def initialize(app, desired_class, container)
+        @app, @desired_class, @container = app, desired_class, container
+    end
+   
+    def length
+        @app.__send_event__(
+            'core', 'cnte', 
+            [['----', @container], ['kocl', OSA::Element.__new__('type', @desired_class::CODE.to_4cc)]], 
+            true).to_rbobj
+    end
+    alias_method :size, :length
+
+    def [](idx)
+        idx += 1 # AE starts counting at 1.
+        o = obj_spec_with_key(OSA::Element.__new__('long', [idx].pack('l')))
+        o.instance_variable_set(:@app, @app)
+        o.extend OSA::ObjectSpecifier
+    end
+
+    def each
+        self.length.times { |i| yield(self[i]) }
+    end
+
+    def get
+        o = obj_spec_with_key(OSA::Element.__new__('abso', 'all '.to_4cc))
+        o.instance_variable_set(:@app, @app)
+        o.extend OSA::ObjectSpecifier
+        o.get
+    end
+    alias_method :to_a, :get
+
+    #######
+    private
+    #######
+
+    def obj_spec_with_key(element)
+        @desired_class.__new_object_specifier__(@desired_class::CODE, @container,
+                                                'indx', element)
+    end
+end
+
 module OSA
     def self.app_with_name(name)
         self.app(*OSA.__scripting_info__(:by_name, name))
@@ -183,7 +231,7 @@ module OSA
         end
         class_elements.values.flatten.each do |element| 
             klass = add_class_from_xml_element(element, class_elements, classes, app_module)
-            
+          
             # Creates properties. 
             element.elements.each('property') do |pelement|
                 name = pelement.attributes['name']
@@ -200,7 +248,10 @@ module OSA
                     end
                 end 
 
-                method_code = <<EOC
+                # Implicit 'get' if the property class is primitive (not defined in the sdef),
+                # otherwise just return an object specifier.
+                method_code = if pklass.nil?
+                    <<EOC
 def #{rubyfy_method(name, klass, type)}
     @app.__send_event__('core', 'getd', 
         [['----', Element.__new_object_specifier__('prop', @app == self ? Element.__new__('null', nil) : self, 
@@ -208,9 +259,20 @@ def #{rubyfy_method(name, klass, type)}
         true).to_rbobj
 end
 EOC
-
+                else
+                    <<EOC
+def #{rubyfy_method(name, klass, type)}
+    o = #{pklass.name}.__new_object_specifier__('prop', @app == self ? Element.__new__('null', nil) : self, 
+                                                'prop', Element.__new__('type', '#{code}'.to_4cc))
+    o.instance_variable_set(:@app, @app)
+    o.extend(OSA::ObjectSpecifier)
+end
+EOC
+                end
+ 
                 klass.class_eval(method_code)
 
+                # For the setter, always send an event.
                 if setter
                     method_code = <<EOC
 def #{rubyfy_method(name, klass, type, true)}(val)
@@ -245,10 +307,7 @@ EOC
 
                 method_code = <<EOC
 def #{rubyfy_method(eklass::PLURAL, klass)}
-    @app.__send_event__('core', 'getd', 
-        [['----', Element.__new_object_specifier__('#{eklass::CODE}', @app == self ? Element.__new__('null', nil) : self, 
-                                                   'indx', Element.__new__('abso', 'all '.to_4cc))]],
-        true).to_rbobj
+    ObjectSpecifierList.new(@app, #{eklass}, @app == self ? Element.__new__('null', nil) : self)
 end
 EOC
 

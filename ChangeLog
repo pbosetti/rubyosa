@@ -1,4 +1,4 @@
-2006-08-24  Laurent Sansonetti  <lsansonetti@apple.com>
+2006-08-25  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/lib/rbosa.rb:
 	Big change: try to minimize the send of apple events. We won't

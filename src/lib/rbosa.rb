@@ -136,7 +136,7 @@ class OSA::ObjectSpecifierList
     end
    
     def length
-        @app.__send_event__(
+        @length ||= @app.__send_event__(
             'core', 'cnte', 
             [['----', @container], ['kocl', OSA::Element.__new__('type', @desired_class::CODE.to_4cc)]], 
             true).to_rbobj
@@ -161,6 +161,12 @@ class OSA::ObjectSpecifierList
         o.get
     end
     alias_method :to_a, :get
+
+    def ==(other)
+        other.kind_of?(self.class) \
+        and other.length == self.length \
+        and (0..other.length).all? { |i| other[i] == self[i] }
+    end
 
     #######
     private

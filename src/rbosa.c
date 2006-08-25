@@ -319,9 +319,9 @@ rbosa_element_eql (VALUE self, VALUE other)
     void *      self_data;
     void *      other_data;
     OSErr       error;
-    bool        ok;
+    Boolean     ok;
 
-    if (!rb_obj_is_kind_of (other, rb_class_of (self)))
+    if (!rb_obj_is_kind_of (other, rb_class_real (rb_class_of (self))))
         return Qfalse;
 
     self_desc = rbosa_element_aedesc (self);
@@ -329,6 +329,9 @@ rbosa_element_eql (VALUE self, VALUE other)
 
     if (self_desc == other_desc)
         return Qtrue;
+
+    if (self_desc->descriptorType != other_desc->descriptorType)
+        return Qfalse;
 
     data_size = AEGetDescDataSize (self_desc);
     if (data_size != AEGetDescDataSize (other_desc))

@@ -9,6 +9,12 @@ RubyOSA is an alternative to RubyAEOSA, and supposed to replace it.
 RubyOSA is licensied under a BSD license, see the COPYRIGHT file for more 
 information.
 
+== Requirements ==
+
+Mac OS X 10.4.X or greater
+ruby 1.8.X or greater
+libxml-ruby 0.3.8 or greater
+
 == Get started ==
 
 $ ruby extconf.rb

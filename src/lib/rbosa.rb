@@ -25,8 +25,19 @@
 # POSSIBILITY OF SUCH DAMAGE.
 
 require 'osa'
-require 'rexml/document'
 require 'date'
+
+# Try to load RubyGems first, libxml-ruby may have been installed by it.
+begin require 'rubygems' rescue LoadError end
+require 'xml/libxml'
+
+# libxml-ruby bug workaround.
+class XML::Node
+    alias_method :old_cmp, :==
+    def ==(x)
+        (x != nil and old_cmp(x))
+    end
+end
 
 class String
     def to_4cc
@@ -203,7 +214,9 @@ module OSA
         @apps ||= {}
         app = @apps[signature]
         return app if app
-        doc = REXML::Document.new(sdef)
+        parser = XML::Parser.new
+        parser.string = sdef
+        doc = parser.parse
 
         # Creates a module for this app, we will define the scripting interface within it.
         app_module = Module.new
@@ -211,16 +224,16 @@ module OSA
 
         # Retrieves and creates enumerations.
         enum_group_codes = []
-        doc.elements.each('/dictionary/suite/enumeration') do |element|
-            enum_group_code = element.attributes['code']
+        doc.find('/dictionary/suite/enumeration').each do |element|
+            enum_group_code = element['code']
             enum_group_codes << enum_group_code
-            enum_module_name = rubyfy_constant_string(element.attributes['name']).upcase
+            enum_module_name = rubyfy_constant_string(element['name']).upcase
             enum_module = Module.new
             
-            element.elements.each('enumerator') do |element|
-                name = element.attributes['name']
+            element.find('enumerator').each do |element|
+                name = element['name']
                 enum_name = rubyfy_constant_string(name).upcase
-                enum_code = element.attributes['code']
+                enum_code = element['code']
                 enum_const = app_module.name + '::' + enum_module_name + '::' + enum_name
 
                 enum = OSA::Enumerator.new(enum_const, name, enum_code, enum_group_code)
@@ -234,19 +247,19 @@ module OSA
         # Retrieves and creates classes.
         classes = {}
         class_elements = {}
-        doc.elements.each('/dictionary/suite/class') do |element|
-            (class_elements[element.attributes['name']] ||= []) << element
+        doc.find('/dictionary/suite/class').each do |element|
+            (class_elements[element['name']] ||= []) << element
         end
         class_elements.values.flatten.each do |element| 
             klass = add_class_from_xml_element(element, class_elements, classes, app_module)
           
             # Creates properties. 
-            element.elements.each('property') do |pelement|
-                name = pelement.attributes['name']
-                code = pelement.attributes['code']
-                type = pelement.attributes['type']
-                access = pelement.attributes['access']
-                setter = access == nil or access == 'w'
+            element.find('property').each do |pelement|
+                name = pelement['name']
+                code = pelement['code']
+                type = pelement['type']
+                access = pelement['access']
+                setter = (access == nil or access.include?('w'))
 
                 pklass = classes[type]
                 if pklass.nil?
@@ -297,8 +310,8 @@ EOC
             end
 
             # Creates elements.
-            element.elements.each('element') do |eelement|
-                type = eelement.attributes['type']
+            element.find('element').each do |eelement|
+                type = eelement['type']
                 
                 eklass = classes[type]
                 if eklass.nil?
@@ -328,13 +341,13 @@ EOC
         raise "No application class defined." if app_class.nil?
 
         # Maps commands to the right classes.
-        all_classes_but_app = classes.values.reject { |x| x.ancestors.include?(OSA::Application) }
-        doc.elements.each('/dictionary/suite/command') do |element|
-            name = element.attributes['name']
+        all_classes_but_app = classes.values.reject { |x| x.ancestors.include?(OSA::EventDispatcher) }
+        doc.find('/dictionary/suite/command').each do |element|
+            name = element['name']
             next if /NOT AVAILABLE/.match(name) # Finder's sdef (Tiger) names some commands with this 'tag'.
-            code = element.attributes['code']
-            direct_parameter = element.elements['direct-parameter']
-            result = element.elements['result']           
+            code = element['code']
+            direct_parameter = element.find_first('direct-parameter')
+            result = element.find_first('result')           
  
             classes_to_define = []
             forget_direct_parameter = true
@@ -380,11 +393,11 @@ EOC
                            direct_parameter_optional,
                            type_of_parameter(direct_parameter)]
             end 
-            element.elements.each('parameter') do |element|
-                opt = element.attributes['optional']
+            element.find('parameter').each do |element|
+                opt = element['optional']
                 # Prefix with '_' parameter names to avoid possible collisions with reserved Ruby keywords (for, etc...).
-                params << ['_' + rubyfy_string(element.attributes['name']),
-                           element.attributes['code'],
+                params << ['_' + rubyfy_string(element['name']),
+                           element['code'],
                            parameter_optional?(element),
                            type_of_parameter(element)]
             end
@@ -395,7 +408,7 @@ EOC
                 self_direct = (pcode == '----' and forget_direct_parameter)
                 defi = if self_direct
                     if forget_direct_parameter
-                        "(self.is_a?(OSA::Application) ? [] : ['----', self])"
+                        "(self.is_a?(OSA::EventDispatcher) ? [] : ['----', self])"
                     else
                         "['----', self]"
                     end
@@ -417,7 +430,7 @@ end
 EOC
 
             classes_to_define.each do |klass|
-                method_name = rubyfy_method(name, klass, (result != nil ? type_of_parameter(result) : nil))
+                method_name = rubyfy_method(name, klass, (result == nil ? nil : type_of_parameter(result)))
                 code = method_code.sub(/%METHOD_NAME%/, method_name)
                 klass.class_eval(code)
             end
@@ -430,22 +443,22 @@ EOC
         app.instance_variable_set(:@sdef, sdef)
         app.instance_variable_set(:@classes, hash)
         app.instance_eval 'def sdef; @sdef; end'
-        app.extend OSA::Application
+        app.extend OSA::EventDispatcher
         @apps[signature] = app
     end
 
     def self.parameter_optional?(element)
-        element.attributes['optional'] == 'yes'
+        element['optional'] == 'yes'
     end
 
     def self.add_class_from_xml_element(element, class_elements, repository, app_module)
-        real_name = element.attributes['name']
+        real_name = element['name']
         klass = repository[real_name]
         if klass.nil?
-            code = element.attributes['code']
-            inherits = element.attributes['inherits']
-            plural = element.attributes['plural']
-    
+            code = element['code']
+            inherits = element['inherits']
+            plural = element['plural']
+   
             if real_name == inherits
                 # Inheriting from itself is a common idiom when adding methods 
                 # to a class that has already been defined, probably to avoid
@@ -466,8 +479,8 @@ EOC
                     klass = Class.new(super_class)
                 end
             end
-           
-            klass.class_eval 'include OSA::Application' if real_name == 'application'
+
+            klass.class_eval 'include OSA::EventDispatcher' if real_name == 'application'
 
             klass.const_set(:REAL_NAME, real_name) unless klass.const_defined?(:REAL_NAME)
             klass.const_set(:PLURAL, plural == nil ? real_name + 's' : plural) unless klass.const_defined?(:PLURAL)
@@ -482,10 +495,10 @@ EOC
     end
     
     def self.type_of_parameter(element)
-        type = element.attributes['type']
+        type = element['type']
         if type.nil?
-            type = element.elements['type']
-            if type.nil? or (type = type.attributes['type']).nil?
+            type = element.find_first('type')
+            if type.nil? or (type = type['type']).nil?
                 raise "Parameter #{element} has no type."
             end
         end

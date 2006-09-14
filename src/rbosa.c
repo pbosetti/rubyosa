@@ -32,7 +32,7 @@ static VALUE mOSA;
 static VALUE cOSAElement;
 static VALUE cOSAElementList;
 static VALUE cOSAElementRecord;
-static VALUE mOSAApplication;
+static VALUE mOSAEventDispatcher;
 
 static ID sClasses;
 static ID sApp;
@@ -468,6 +468,6 @@ Init_osa (void)
     cOSAElementRecord = rb_define_class_under (mOSA, "ElementRecord", cOSAElement);
     rb_define_method (cOSAElementRecord, "to_a", rbosa_elementrecord_to_a, 0);
 
-    mOSAApplication = rb_define_module_under (mOSA, "Application");
-    rb_define_method (mOSAApplication, "__send_event__", rbosa_app_send_event, 4);
+    mOSAEventDispatcher = rb_define_module_under (mOSA, "EventDispatcher");
+    rb_define_method (mOSAEventDispatcher, "__send_event__", rbosa_app_send_event, 4);
 }

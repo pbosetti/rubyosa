@@ -1,3 +1,16 @@
+2006-09-14  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* README:
+	Mention that libxml-ruby is now required.
+
+	* src/lib/rbosa.rb:
+	- Requires libxml-ruby and uses it to parse the sdef file ;
+	- Fixed a bug where certain setter property methods were not
+	  generated.
+
+	* src/rbosa.c:
+	s/OSA::Application/OSA::EventDispatcher.
+
 2006-08-25  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/lib/rbosa.rb:

@@ -261,13 +261,17 @@ module OSA
                 access = pelement['access']
                 setter = (access == nil or access.include?('w'))
 
-                pklass = classes[type]
-                if pklass.nil?
-                    pklass_elements = class_elements[type]
-                    unless pklass_elements.nil?
-                        pklass = add_class_from_xml_element(pklass_elements.first, class_elements, classes, app_module)
-                    end
-                end 
+                if type == 'reference'
+                    pklass = OSA::Element 
+                else
+                    pklass = classes[type]
+                    if pklass.nil?
+                        pklass_elements = class_elements[type]
+                        unless pklass_elements.nil?
+                            pklass = add_class_from_xml_element(pklass_elements.first, class_elements, classes, app_module)
+                        end
+                    end 
+                end
 
                 # Implicit 'get' if the property class is primitive (not defined in the sdef),
                 # otherwise just return an object specifier.

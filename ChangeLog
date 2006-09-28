@@ -1,3 +1,21 @@
+2006-09-28  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* src/lib/rbosa.rb:
+	Print the debug messages only if $DEBUG is on.
+
+	* AUTHORS:
+	Added Sebastian and James.
+
+2006-09-28  James MacAulay  <jmacaulay@gmail.com>
+
+	* src/lib/rbosa.rb:
+	Properly convert the 'comp' type to real 64-bit value.
+
+2006-09-27  Sebastian Delmont  <sd@notso.net>
+
+	* src/lib/rbosa.rb:
+	Added support for the QuickDraw rectangle type.
+
 2006-09-25  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/lib/rbosa.rb:

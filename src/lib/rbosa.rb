@@ -87,8 +87,11 @@ class OSA::Element
                 # Force TEXT type to not get Unicode.
                 __data__('TEXT')
             # Signed integer. 
-            when 'shor', 'long', 'comp'
+            when 'shor', 'long'
                 __data__(type).unpack('l').first
+            # Signed long (64-bit). 
+            when 'comp'
+                __data__(type).unpack('q').first
             # Unsigned integer.
             when 'magn'
                 __data__(type).unpack('d').first
@@ -111,6 +114,9 @@ class OSA::Element
             # Enumerator.
             when 'enum'
                 OSA::Enumerator.enum_for_code(__data__('TEXT')) or self
+            # QuickDraw Rectangle, aka "bounding rectangle"
+            when 'qdrt'
+              __data__(type).unpack('S4')
             # Unrecognized type, return self.
             else
                 self 
@@ -326,7 +332,7 @@ EOC
                 end 
 
                 if eklass.nil?
-                    STDERR.puts "Cannot find class '#{type}', skipping element '#{eelement}'" if $VERBOSE
+                    STDERR.puts "Cannot find class '#{type}', skipping element '#{eelement}'" if $DEBUG
                     next
                 end
 
@@ -475,7 +481,7 @@ EOC
             else
                 super_elements = class_elements[inherits]
                 if super_elements.nil?
-                    STDERR.puts "sdef bug: class #{real_name} inherits from #{inherits} which is not defined - fall back inheriting from OSA::Element"
+                    STDERR.puts "sdef bug: class '#{real_name}' inherits from '#{inherits}' which is not defined - fall back inheriting from OSA::Element" if $DEBUG
                     klass = OSA::Element
                 else
                     super_class = add_class_from_xml_element(super_elements.first, class_elements, 
@@ -521,11 +527,14 @@ EOC
                 "'furl', #{varname}.to_s"    
             when 'integer', 'double integer'
                 "'magn', [#{varname}].pack('l')"
+            when 'bounding rectangle' 
+                # QuickDraw Rectangle
+                "'qdrt', #{varname}.pack('S4')"
             else
                 if enum_group_codes.include?(type)
                     "'enum', #{varname}.code.to_4cc"
                 else     
-                    STDERR.puts "unrecognized type #{type}" if $VERBOSE
+                    STDERR.puts "unrecognized type '#{type}'" if $DEBUG
                     "'null', nil"
                 end
         end

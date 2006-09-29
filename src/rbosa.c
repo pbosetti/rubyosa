@@ -379,6 +379,68 @@ rbosa_element_inspect (VALUE self)
     return CSTR2RVAL (buf);
 }
 
+static long
+__rbosa_elementlist_count (AEDescList *list)
+{
+    OSErr   error;
+    long    count;
+
+    error = AECountItems (list, &count);
+    if (error != noErr)
+        rb_raise (rb_eRuntimeError, "Cannot count items : %s (%d)", 
+                  GetMacOSStatusErrorString (error), error);
+
+    return count;
+}
+
+static void
+__rbosa_elementlist_add (AEDescList *list, VALUE element, long pos)
+{
+    OSErr   error;
+
+    error = AEPutDesc (list, pos, rbosa_element_aedesc (element));
+    if (error != noErr)
+        rb_raise (rb_eRuntimeError, "Cannot add given descriptor : %s (%d)", 
+                  GetMacOSStatusErrorString (error), error);
+}
+
+static VALUE
+rbosa_elementlist_new (int argc, VALUE *argv, VALUE self)
+{
+    OSErr           error;
+    AEDescList      list;
+    VALUE           ary;
+    int             i;
+
+    rb_scan_args (argc, argv, "01", &ary);
+
+    if (!NIL_P (ary))
+        Check_Type (ary, T_ARRAY);
+
+    error = AECreateList (NULL, 0, false, &list);
+    if (error != noErr) 
+        rb_raise (rb_eRuntimeError, "Cannot create Apple Event descriptor list : %s (%d)", 
+                  GetMacOSStatusErrorString (error), error);
+
+    if (!NIL_P (ary)) {
+        for (i = 0; i < RARRAY (ary)->len; i++)
+            __rbosa_elementlist_add (&list, RARRAY (ary)->ptr[i], i + 1); 
+    }
+    
+    return rbosa_element_make (self, &list, Qnil);
+}
+
+static VALUE
+rbosa_elementlist_add (VALUE self, VALUE element)
+{
+    AEDescList *    list;
+
+    list = (AEDescList *)rbosa_element_aedesc (self); 
+    __rbosa_elementlist_add (list, __rbosa_elementlist_count (list) + 1, element);
+
+    return self;    
+}
+
 static VALUE
 __rbosa_elementlist_get (VALUE self, long index, AEKeyword *keyword)
 {
@@ -408,16 +470,7 @@ rbosa_elementlist_get (VALUE self, VALUE index)
 static VALUE
 rbosa_elementlist_size (VALUE self)
 {
-    OSErr   error;
-    long    count;
-    
-    count = 0;
-    error = AECountItems ((AEDescList *)rbosa_element_aedesc (self), &count);
-    if (error != noErr)
-        rb_raise (rb_eRuntimeError, "Cannot count items : %s (%d)", 
-                  GetMacOSStatusErrorString (error), error);
-
-    return INT2FIX (count);
+    return INT2FIX (__rbosa_elementlist_count ((AEDescList *)rbosa_element_aedesc (self)));
 }
 
 static VALUE
@@ -461,9 +514,11 @@ Init_osa (void)
     rb_define_method (cOSAElement, "inspect", rbosa_element_inspect, 0);
 
     cOSAElementList = rb_define_class_under (mOSA, "ElementList", cOSAElement);
+    rb_define_singleton_method (cOSAElementList, "__new__", rbosa_elementlist_new, -1);
     rb_define_method (cOSAElementList, "[]", rbosa_elementlist_get, 1);
     rb_define_method (cOSAElementList, "size", rbosa_elementlist_size, 0);
     rb_define_alias (cOSAElementList, "length", "size");
+    rb_define_method (cOSAElementList, "add", rbosa_elementlist_add, 1);
 
     cOSAElementRecord = rb_define_class_under (mOSA, "ElementRecord", cOSAElement);
     rb_define_method (cOSAElementRecord, "to_a", rbosa_elementrecord_to_a, 0);

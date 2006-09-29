@@ -507,15 +507,19 @@ EOC
     def self.type_of_parameter(element)
         type = element['type']
         if type.nil?
-            type = element.find_first('type')
-            if type.nil? or (type = type['type']).nil?
+            etype = element.find_first('type')
+            if etype.nil? or (type = etype['type']).nil?
                 raise "Parameter #{element} has no type."
             end
+            type = "list_of_#{type}" if etype['list'] == 'yes'
         end
         return type
     end
 
     def self.new_element_code(type, varname, enum_group_codes)
+        if md = /^list_of_(.+)$/.match(type)
+            return "#{varname}.is_a?(OSA::Element) ? #{varname} : ElementList.__new__(#{varname}.to_a.map { |x| #{new_element_code(md[1], 'x', enum_group_codes)} })"
+        end
         code = "#{varname}.is_a?(OSA::Element) ? #{varname} : Element.__new__("
         code << case type
             when 'boolean'

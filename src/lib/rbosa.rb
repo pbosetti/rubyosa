@@ -413,6 +413,7 @@ EOC
             end
 
             p_dec, p_def = [], []
+            already_has_optional_args = false # Once an argument is optional, all following arguments should be optional.
             params.each do |pname, pcode, optional, ptype|
                 decl = pname
                 self_direct = (pcode == '----' and forget_direct_parameter)
@@ -425,9 +426,10 @@ EOC
                 else
                     "['#{pcode}', #{new_element_code(ptype, pname, enum_group_codes)}]"
                 end
-                if optional and !self_direct
+                if already_has_optional_args or (optional and !self_direct)
                     decl += '=nil'
                     defi = "(#{pname} == nil ? [] : #{defi})"
+                    already_has_optional_args = true
                 end 
                 p_dec << decl unless self_direct
                 p_def << defi

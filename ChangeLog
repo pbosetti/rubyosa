@@ -1,3 +1,10 @@
+2006-10-11  Sebastian Delmont  <sd@notso.net>
+
+	* src/lib/rbosa.rb:
+	Fixed a bug in the code when handling optional 
+	parameters. If a parameter is optional, defines
+	all other parameters as optional.
+
 2006-09-29  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/lib/rbosa.rb, src/rbosa.c:

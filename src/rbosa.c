@@ -198,6 +198,8 @@ rbosa_app_send_event (VALUE self, VALUE event_class, VALUE event_id, VALUE param
     OSErr       error;
     AppleEvent  ae;
     AppleEvent  reply;
+    VALUE       rb_timeout;
+    SInt32      timeout;
 
     error = AECreateAppleEvent (RVAL2FOURCHAR (event_class),
                                 RVAL2FOURCHAR (event_id),
@@ -233,8 +235,11 @@ rbosa_app_send_event (VALUE self, VALUE event_class, VALUE event_id, VALUE param
         } 
     }
 
+    rb_timeout = rb_iv_get (mOSA, "@timeout");
+    timeout = NIL_P (rb_timeout) ? kAEDefaultTimeout : NUM2INT (rb_timeout);
+   
     error = AESend (&ae, &reply, (RVAL2CBOOL(need_retval) ? kAEWaitReply : kAENoReply) | kAENeverInteract | kAECanSwitchLayer,
-                    kAENormalPriority, kAEDefaultTimeout, NULL, NULL);
+                    kAENormalPriority, timeout, NULL, NULL);
 
     AEDisposeDesc (&ae); 
 
@@ -495,6 +500,15 @@ rbosa_elementrecord_to_a (VALUE self)
     return ary;
 }
 
+#define rbosa_define_param(name,default_value)                      \
+    do {                                                            \
+        rb_define_attr (CLASS_OF (mOSA), name, 1, 1);               \
+        if (default_value == Qtrue || default_value == Qfalse)      \
+            rb_define_alias (CLASS_OF (mOSA), name"?", name);       \
+        rb_iv_set (mOSA, "@"name, default_value);                   \
+    }                                                               \
+    while (0)
+
 void
 Init_osa (void)
 {
@@ -525,4 +539,7 @@ Init_osa (void)
 
     mOSAEventDispatcher = rb_define_module_under (mOSA, "EventDispatcher");
     rb_define_method (mOSAEventDispatcher, "__send_event__", rbosa_app_send_event, 4);
+
+    rbosa_define_param ("timeout", INT2NUM (kAEDefaultTimeout));
+    rbosa_define_param ("lazy_events", Qtrue);
 }

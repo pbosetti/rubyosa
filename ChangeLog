@@ -1,3 +1,16 @@
+2006-10-16  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* src/lib/rbosa.rb,
+	  src/rbosa.c,
+	  src/rbosa.h:
+	Added OSA accessors to control the Apple Event timeouts
+	and the lazy send mechanism (by default activated).
+
+2006-10-13  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* README, TODO:
+	Revisions for the first public release.
+
 2006-10-11  Sebastian Delmont  <sd@notso.net>
 
 	* src/lib/rbosa.rb:

@@ -295,8 +295,12 @@ EOC
 def #{rubyfy_method(name, klass, type)}
     o = #{pklass.name}.__new_object_specifier__('prop', @app == self ? Element.__new__('null', nil) : self, 
                                                 'prop', Element.__new__('type', '#{code}'.to_4cc))
-    o.instance_variable_set(:@app, @app)
-    o.extend(OSA::ObjectSpecifier)
+    unless OSA.lazy_events?
+        @app.__send_event__('core', 'getd', [['----', o]], true).to_rbobj
+    else
+        o.instance_variable_set(:@app, @app)
+        o.extend(OSA::ObjectSpecifier)
+    end
 end
 EOC
                 end
@@ -338,7 +342,15 @@ EOC
 
                 method_code = <<EOC
 def #{rubyfy_method(eklass::PLURAL, klass)}
-    ObjectSpecifierList.new(@app, #{eklass}, @app == self ? Element.__new__('null', nil) : self)
+    unless OSA.lazy_events?
+        @app.__send_event__('core', 'getd', 
+            [['----', Element.__new_object_specifier__(
+                '#{eklass::CODE}', @app == self ? Element.__new__('null', nil) : self,
+                'indx', Element.__new__('abso', 'all '.to_4cc))]],
+            true).to_rbobj
+    else
+        ObjectSpecifierList.new(@app, #{eklass}, @app == self ? Element.__new__('null', nil) : self)
+    end
 end
 EOC
 

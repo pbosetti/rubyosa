@@ -1,10 +1,12 @@
 == Introduction ==
 
-RubyOSA is a bridge that connects Ruby to the AppleScript infrastructure. 
+RubyOSA is a bridge that connects Ruby to the Apple Event Manager 
+infrastructure.
+ 
 It automatically populates the API (classes, methods...) according to the 
 target application's scriptable definition.
 
-RubyOSA is an alternative to RubyAEOSA, and supposed to replace it.
+RubyOSA is an alternative to RubyAEOSA, and meant to replace it.
 
 RubyOSA is licensied under a BSD license, see the COPYRIGHT file for more 
 information.

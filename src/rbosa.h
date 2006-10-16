@@ -31,6 +31,7 @@
 
 #include "osx_ruby.h"
 #include <Carbon/Carbon.h>
+#include <sys/param.h>
 
 /* rbosa_sdef.c */
 VALUE rbosa_scripting_info (VALUE self, VALUE criterion, VALUE value);

@@ -212,6 +212,24 @@ module OSA
         self.app(*OSA.__scripting_info__(:by_signature, signature))
     end
 
+    def self.set_params(hash)
+        previous_values = {}
+        hash.each do |key, val|
+            ivar_key = '@' + key.to_s
+            previous_val = self.instance_variable_get(ivar_key)
+            if previous_val.nil?
+                raise ArgumentError, "Invalid key value (no parameter named #{key} was found)"
+            end
+            previous_values[ivar_key] = previous_val;
+            self.instance_variable_set(ivar_key, hash[key])
+        end
+        if block_given?
+            yield
+            previous_values.each { |key, val| self.instance_variable_set(key, val) }
+        end
+        nil
+    end
+
     #######
     private
     #######

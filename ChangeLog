@@ -3,8 +3,10 @@
 	* src/lib/rbosa.rb,
 	  src/rbosa.c,
 	  src/rbosa.h:
-	Added OSA accessors to control the Apple Event timeouts
-	and the lazy send mechanism (by default activated).
+	- Added OSA accessors to control the Apple Event timeouts
+	  and the lazy send mechanism (by default activated) ;
+	- Added a convenience method (OSA.set_params) to set params
+	  within the framework of a given closure.
 
 2006-10-13  Laurent Sansonetti  <lsansonetti@apple.com>
 

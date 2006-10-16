@@ -7,7 +7,7 @@ if ARGV.empty?
     exit 1
 end
 
-app = OSA::app_with_name('QuickTime Player')
+app = OSA.app('QuickTime Player')
 ARGV.each { |p| app.open(p) }
 l = app.movies.to_a
 exit if l.length == 0

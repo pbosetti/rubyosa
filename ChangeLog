@@ -1,6 +1,11 @@
 2006-10-16  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/lib/rbosa.rb,
+	  sample/*.rb:
+	Added OSA.app as a convenience shortcut to OSA.app_with_name.
+	Updated samples.
+
+	* src/lib/rbosa.rb,
 	  src/rbosa.c,
 	  src/rbosa.h:
 	- Added OSA accessors to control the Apple Event timeouts

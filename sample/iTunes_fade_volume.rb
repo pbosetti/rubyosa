@@ -2,7 +2,7 @@
 
 require 'rbosa'
 
-app = OSA.app_with_name('iTunes')
+app = OSA.app('iTunes')
 
 original_volume = app.sound_volume
 

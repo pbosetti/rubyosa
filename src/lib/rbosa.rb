@@ -197,19 +197,23 @@ end
 
 module OSA
     def self.app_with_name(name)
-        self.app(*OSA.__scripting_info__(:by_name, name))
+        self.__app__(*OSA.__scripting_info__(:by_name, name))
     end
 
     def self.app_with_path(path)
-        self.app(*OSA.__scripting_info__(:by_path, path))
+        self.__app__(*OSA.__scripting_info__(:by_path, path))
     end
 
     def self.app_with_bundle_id(bundle_id)
-        self.app(*OSA.__scripting_info__(:by_bundle_id, bundle_id))
+        self.__app__(*OSA.__scripting_info__(:by_bundle_id, bundle_id))
     end
 
     def self.app_with_signature(signature)
-        self.app(*OSA.__scripting_info__(:by_signature, signature))
+        self.__app__(*OSA.__scripting_info__(:by_signature, signature))
+    end
+
+    def self.app(name)
+        self.app_with_name(name)
     end
 
     def self.set_params(hash)
@@ -234,7 +238,7 @@ module OSA
     private
     #######
 
-    def self.app(name, signature, sdef)
+    def self.__app__(name, signature, sdef)
         @apps ||= {}
         app = @apps[signature]
         return app if app

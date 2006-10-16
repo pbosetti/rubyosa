@@ -4,7 +4,7 @@ require 'rbosa'
 require 'curses'
 include Curses
 
-app = OSA.app_with_name('iTunes')
+app = OSA.app('iTunes')
 
 if app.current_track.nil?
     # We don't support write access now, so...

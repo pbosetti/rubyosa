@@ -238,6 +238,27 @@ module OSA
     private
     #######
 
+    class DocItem
+        attr_reader :name, :description, :type
+        def initialize(name, description, type=nil)
+            @name = name
+            @description = description
+            @type = type
+        end
+    end
+
+    class DocMethod < DocItem
+        attr_reader :result, :args
+        def initialize(name, description, result, args)
+            super(name, description, nil)
+            @result = result
+            @args = args
+        end
+        def inspect
+            "<Method #{name} (#{description})>"
+        end
+    end
+ 
     def self.__app__(name, signature, sdef)
         @apps ||= {}
         app = @apps[signature]
@@ -258,6 +279,9 @@ module OSA
             enum_module_name = rubyfy_constant_string(element['name']).upcase
             enum_module = Module.new
             
+            documentation = [] 
+            enum_module.const_set('DESCRIPTION', documentation)
+ 
             element.find('enumerator').each do |element|
                 name = element['name']
                 enum_name = rubyfy_constant_string(name).upcase
@@ -265,8 +289,9 @@ module OSA
                 enum_const = app_module.name + '::' + enum_module_name + '::' + enum_name
 
                 enum = OSA::Enumerator.new(enum_const, name, enum_code, enum_group_code)
-
                 enum_module.const_set(enum_name, enum)
+
+                documentation << DocItem.new(enum_name, englishify_sentence(element['description']))
             end
  
             app_module.const_set(enum_module_name, enum_module)
@@ -280,13 +305,17 @@ module OSA
         end
         class_elements.values.flatten.each do |element| 
             klass = add_class_from_xml_element(element, class_elements, classes, app_module)
-          
+            methods_doc = []
+            klass.const_set('DESCRIPTION', englishify_sentence(element['description']))
+            klass.const_set('METHODS_DESCRIPTION', methods_doc)
+
             # Creates properties. 
             element.find('property').each do |pelement|
                 name = pelement['name']
                 code = pelement['code']
                 type = pelement['type']
                 access = pelement['access']
+                description = pelement['description']
                 setter = (access == nil or access.include?('w'))
 
                 if type == 'reference'
@@ -303,9 +332,10 @@ module OSA
 
                 # Implicit 'get' if the property class is primitive (not defined in the sdef),
                 # otherwise just return an object specifier.
+                method_name = rubyfy_method(name, klass, type)
                 method_code = if pklass.nil?
                     <<EOC
-def #{rubyfy_method(name, klass, type)}
+def #{method_name}
     @app.__send_event__('core', 'getd', 
         [['----', Element.__new_object_specifier__('prop', @app == self ? Element.__new__('null', nil) : self, 
                                                    'prop', Element.__new__('type', '#{code}'.to_4cc))]],
@@ -314,7 +344,7 @@ end
 EOC
                 else
                     <<EOC
-def #{rubyfy_method(name, klass, type)}
+def #{method_name}
     o = #{pklass.name}.__new_object_specifier__('prop', @app == self ? Element.__new__('null', nil) : self, 
                                                 'prop', Element.__new__('type', '#{code}'.to_4cc))
     unless OSA.lazy_events?
@@ -328,20 +358,26 @@ EOC
                 end
  
                 klass.class_eval(method_code)
+                ptype = (pklass or type)
+                ptypedoc = (pklass ? "a #{pklass} object" : type)
+                methods_doc << DocMethod.new(method_name, englishify_sentence("Gets the #{name} property -- #{description}"), DocItem.new('result', englishify_sentence("the property value, as #{ptypedoc}"), ptype), nil)
 
                 # For the setter, always send an event.
                 if setter
+                    method_name = rubyfy_method(name, klass, type, true)
                     method_code = <<EOC
-def #{rubyfy_method(name, klass, type, true)}(val)
+def #{method_name}(val)
     @app.__send_event__('core', 'setd', 
         [['----', Element.__new_object_specifier__('prop', @app == self ? Element.__new__('null', nil) : self, 
                                                    'prop', Element.__new__('type', '#{code}'.to_4cc))],
          ['data', #{new_element_code(type, 'val', enum_group_codes)}]],
-        true).to_rbobj
+        true)
+    return nil
 end
 EOC
 
                     klass.class_eval(method_code)
+                    methods_doc << DocMethod.new(method_name, englishify_sentence("Sets the #{name} property -- #{description}"), nil, [DocItem.new('val', englishify_sentence("the value to be set, as #{ptypedoc}"), ptype)])
                 end 
             end
 
@@ -362,8 +398,9 @@ EOC
                     next
                 end
 
+                method_name = rubyfy_method(eklass::PLURAL, klass)
                 method_code = <<EOC
-def #{rubyfy_method(eklass::PLURAL, klass)}
+def #{method_name}
     unless OSA.lazy_events?
         @app.__send_event__('core', 'getd', 
             [['----', Element.__new_object_specifier__(
@@ -377,6 +414,7 @@ end
 EOC
 
                 klass.class_eval(method_code)
+                methods_doc << DocMethod.new(method_name, englishify_sentence("Gets the #{eklass::PLURAL} associated with this object"), DocItem.new('result', englishify_sentence("an Array of #{eklass} objects"), eklass), nil)
             end
         end
 
@@ -389,6 +427,7 @@ EOC
         doc.find('/dictionary/suite/command').each do |element|
             name = element['name']
             next if /NOT AVAILABLE/.match(name) # Finder's sdef (Tiger) names some commands with this 'tag'.
+            description = element['description']
             code = element['code']
             direct_parameter = element.find_first('direct-parameter')
             result = element.find_first('result')           
@@ -433,30 +472,27 @@ EOC
             params = []
             unless direct_parameter.nil?
                 params << ['direct', 
-                           '----', 
+                           '----',
+                           direct_parameter['description'], 
                            direct_parameter_optional,
                            type_of_parameter(direct_parameter)]
             end 
-            element.find('parameter').each do |element|
-                opt = element['optional']
-                # Prefix with '_' parameter names to avoid possible collisions with reserved Ruby keywords (for, etc...).
-                params << ['_' + rubyfy_string(element['name']),
-                           element['code'],
-                           parameter_optional?(element),
-                           type_of_parameter(element)]
-            end
 
-            p_dec, p_def = [], []
+            params.concat(element.find('parameter').to_a.map do |element|
+                [rubyfy_string(element['name'], true),
+                 element['code'],
+                 element['description'],
+                 parameter_optional?(element),
+                 type_of_parameter(element)]
+            end)
+ 
+            p_dec, p_def, p_args_doc = [], [], []
             already_has_optional_args = false # Once an argument is optional, all following arguments should be optional.
-            params.each do |pname, pcode, optional, ptype|
+            params.each do |pname, pcode, pdesc, optional, ptype|
                 decl = pname
                 self_direct = (pcode == '----' and forget_direct_parameter)
                 defi = if self_direct
-                    if forget_direct_parameter
-                        "(self.is_a?(OSA::EventDispatcher) ? [] : ['----', self])"
-                    else
-                        "['----', self]"
-                    end
+                    forget_direct_parameter ? "(self.is_a?(OSA::EventDispatcher) ? [] : ['----', self])" : "['----', self]"
                 else
                     "['#{pcode}', #{new_element_code(ptype, pname, enum_group_codes)}]"
                 end
@@ -465,7 +501,10 @@ EOC
                     defi = "(#{pname} == nil ? [] : #{defi})"
                     already_has_optional_args = true
                 end 
-                p_dec << decl unless self_direct
+                unless self_direct
+                    p_dec << decl 
+                    p_args_doc << DocItem.new(decl, englishify_sentence(pdesc)) 
+                end
                 p_def << defi
             end
 
@@ -475,10 +514,20 @@ def %METHOD_NAME%(#{p_dec.join(', ')})
 end
 EOC
 
+            if result.nil?
+                result_type = result_doc = nil
+            else
+                result_type = type_of_parameter(result)
+                result_klass = classes[result_type]
+                result_doc = DocItem.new('result', englishify_sentence(result['description']), (result_klass || result_type))
+            end
+
             classes_to_define.each do |klass|
-                method_name = rubyfy_method(name, klass, (result == nil ? nil : type_of_parameter(result)))
+                method_name = rubyfy_method(name, klass, result_type)
                 code = method_code.sub(/%METHOD_NAME%/, method_name)
                 klass.class_eval(code)
+                methods_doc = klass.const_get(:METHODS_DESCRIPTION)
+                methods_doc << DocMethod.new(method_name, englishify_sentence(description), result_doc, p_args_doc)
             end
         end
 
@@ -587,8 +636,14 @@ EOC
         rubyfy_string(string).capitalize.gsub(/\s(.)/) { |s| s[1].chr.upcase }
     end
 
-    def self.rubyfy_string(string)
-        string.gsub(/[\s\-\.\/]/, '_').gsub(/&/, 'and')
+    RUBY_RESERVED_KEYWORDS = ['for']
+    def self.rubyfy_string(string, handle_ruby_reserved_keywords=false)
+        # Prefix with '_' parameter names to avoid possible collisions with reserved Ruby keywords (for, etc...).
+        if RUBY_RESERVED_KEYWORDS.include?(string)
+            '_' + string
+        else
+            string.gsub(/[\s\-\.\/]/, '_').gsub(/&/, 'and')
+        end
     end
     
     def self.rubyfy_method(string, klass, return_type=nil, setter=false)
@@ -605,6 +660,14 @@ EOC
             s = 'osa_' + s
         end
         return s
+    end
+
+    def self.englishify_sentence(string)
+        return '' if string.nil?
+        string[0] = string[0].chr.upcase
+        last = string[-1].chr
+        string << '.' if last != '.' and last != '?' and last != '!'
+        return string
     end
 end
 

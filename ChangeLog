@@ -1,3 +1,14 @@
+2006-10-25  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* src/lib/rbosa.rb,
+	  rdoc-osa.rb:
+	- Retrieves documentation from the sdef ;
+	- Added a new tool (rdoc-osa) that generates RDoc documentation for the
+	  given application.
+
+	* TODO:
+	Revised.
+
 2006-10-16  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/lib/rbosa.rb,

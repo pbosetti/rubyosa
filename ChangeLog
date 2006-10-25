@@ -19,7 +19,8 @@
 	  bin/rdoc-osa,
 	  rdoc-osa.rb:
 	- Added RubyGems specification file ;
-	- Moved the rdoc-osa tool to ./bin.
+	- Moved the rdoc-osa tool to ./bin ;
+	- Added support for 'type class' OSA parameters.
 
 	* README:
 	Revised.

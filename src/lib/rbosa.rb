@@ -212,7 +212,7 @@ module OSA
     @conversions_to_osa = {}
 
     def self.add_conversion(hash, types, block, max_arity, replace=false)
-        raise "Conversion block has to accept either #{(1..max.arity).to_a.join(', ')} arguments" unless (1..max_arity) === block.arity
+        raise "Conversion block has to accept either #{(1..max_arity).to_a.join(', ')} arguments" unless (1..max_arity) === block.arity
         types.each do |type|
             next if !replace and hash.has_key?(type)
             hash[type] = block 
@@ -752,6 +752,9 @@ OSA.add_conversion_to_ruby('reco') { |value, type, object| object.is_a?(OSA::Ele
 
 # Enumerator.
 OSA.add_conversion_to_ruby('enum') { |value, type, object| OSA::Enumerator.enum_for_code(object.__data__('TEXT')) or self }
+
+# Class.
+OSA.add_conversion_to_osa('type class') { |value| value.is_a?(Class) and value.ancestors.include?(OSA::Element) ? ['type', value::CODE.to_4cc] : self } 
 
 # QuickDraw Rectangle, aka "bounding rectangle".
 OSA.add_conversion_to_ruby('qdrt') { |value| value.unpack('S4') }

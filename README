@@ -3,8 +3,8 @@
 RubyOSA is a bridge that connects Ruby to the Apple Event Manager 
 infrastructure.
  
-It automatically populates the API (classes, methods...) according to the 
-target application's scriptable definition.
+It automatically populates the API (classes, methods, constants) according 
+to the target application's scriptable definition.
 
 RubyOSA is an alternative to RubyAEOSA, and meant to replace it.
 
@@ -26,6 +26,10 @@ $ sudo make install
 == Support ==
 
 Sample code is available in the `sample' sub-directory.
+
+The rdoc-osa tool can be used to generate API reference documentation
+for the given application. See its --help flag for more information
+about how to use it.
 
 Feel free to send feedback to lsansonetti@apple.com.
 

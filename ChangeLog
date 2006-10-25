@@ -1,5 +1,14 @@
 2006-10-25  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* rubyosa.gemspec,
+	  bin/rdoc-osa,
+	  rdoc-osa.rb:
+	- Added RubyGems specification file ;
+	- Moved the rdoc-osa tool to ./bin.
+
+	* README:
+	Revised.
+
 	* src/rbosa.c:
 	Do not inspect descriptors.
 

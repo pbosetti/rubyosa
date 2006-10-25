@@ -1,3 +1,4 @@
+#!/usr/bin/env ruby
 # RDoc frontend for RubyOSA. Generate API referene documentation for the 
 # given application, based on the descriptions in the sdef(5).
 #

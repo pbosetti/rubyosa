@@ -105,50 +105,14 @@ end
 class OSA::Element
     REAL_NAME = CODE = nil
     def to_rbobj
-        type = __type__
-        case type
-            # Null.
-            when 'null'
-                nil
-            # String.
-            when 'TEXT', 'utxt'
-                # Force TEXT type to not get Unicode.
-                __data__('TEXT')
-            # Signed integer. 
-            when 'shor', 'long'
-                __data__(type).unpack('l').first
-            # Signed long (64-bit). 
-            when 'comp'
-                __data__(type).unpack('q').first
-            # Unsigned integer.
-            when 'magn'
-                __data__(type).unpack('d').first
-            # Boolean.
-            when 'bool'
-                __data__('bool').unpack('c').first != 0
-            when 'true'
-                true
-            when 'fals'
-                false
-            # Date.
-            when 'ldt '
-     	   	    Date.new(1904, 1, 1) + Date.time_to_day_fraction(0, 0, __data__(type).unpack('q').first)
-            # Array.
-            when 'list'
-                is_a?(OSA::ElementList) ? to_a.map { |x| x.to_rbobj } : self
-            # Hash.
-            when 'reco'
-                is_a?(OSA::ElementRecord) ? to_hash : self
-            # Enumerator.
-            when 'enum'
-                OSA::Enumerator.enum_for_code(__data__('TEXT')) or self
-            # QuickDraw Rectangle, aka "bounding rectangle"
-            when 'qdrt'
-              __data__(type).unpack('S4')
-            # Unrecognized type, return self.
-            else
-                self 
-        end
+      unless __type__ == 'null'
+        val = OSA.convert_to_ruby(self)
+        val == nil ? self : val
+      end
+    end
+    
+    def self.from_rbobj(requested_type, value, enum_group_codes)
+      self.__new__(*OSA.convert_to_osa(requested_type, value, enum_group_codes))
     end
 end
 
@@ -244,6 +208,54 @@ module OSA
         self.app_with_name(name)
     end
 
+    @conversions_to_ruby = {}
+    @conversions_to_osa = {}
+
+    def self.add_conversion(hash, types, block, max_arity, replace=false)
+        raise "Conversion block has to accept either #{(1..max.arity).to_a.join(', ')} arguments" unless (1..max_arity) === block.arity
+        types.each do |type|
+            next if !replace and hash.has_key?(type)
+            hash[type] = block 
+        end
+    end
+
+    def self.replace_conversion_to_ruby(*types, &block)
+        add_conversion(@conversions_to_ruby, types, block, 3, true)
+    end
+    
+    def self.add_conversion_to_ruby(*types, &block)
+        add_conversion(@conversions_to_ruby, types, block, 3)
+    end
+
+    def self.replace_conversion_to_osa(*types, &block)
+        add_conversion(@conversions_to_osa, types, block, 2, true)
+    end
+    
+    def self.add_conversion_to_osa(*types, &block)
+        add_conversion(@conversions_to_osa, types, block, 2)
+    end
+    
+    def self.convert_to_ruby(osa_object)
+        osa_type = osa_object.__type__.to_s
+        osa_data = osa_object.__data__(osa_type) if osa_type and osa_type != 'null'
+        if conversion = @conversions_to_ruby[osa_type]
+            args = [osa_data, osa_type, osa_object]
+            conversion.call(*args[0..(conversion.arity - 1)])
+        end
+    end
+
+    def self.convert_to_osa(requested_type, value, enum_group_codes=nil)
+        if conversion = @conversions_to_osa[requested_type]
+            args = [value, requested_type]
+            conversion.call(*args[0..(conversion.arity - 1)])
+        elsif enum_group_codes and enum_group_codes.include?(requested_type)
+            ['enum', value.code.to_4cc]
+        else     
+            STDERR.puts "unrecognized type #{requested_type}" if $VERBOSE
+            ['null', nil]
+        end
+    end
+    
     def self.set_params(hash)
         previous_values = {}
         hash.each do |key, val|
@@ -654,30 +666,7 @@ EOC
         if md = /^list_of_(.+)$/.match(type)
             return "#{varname}.is_a?(OSA::Element) ? #{varname} : ElementList.__new__(#{varname}.to_a.map { |x| #{new_element_code(md[1], 'x', enum_group_codes)} })"
         end
-        code = "#{varname}.is_a?(OSA::Element) ? #{varname} : Element.__new__("
-        code << case type
-            when 'boolean'
-                "(#{varname} ? 'true'.to_4cc : 'fals'.to_4cc), nil"
-            when 'string', 'text', 'Unicode text'
-                "'TEXT', #{varname}.to_s"
-            when 'alias', 'file'
-                # Let's use the 'furl' type here instead of 'alis', as we don't have a way to produce an alias for a file that does not exist yet.
-                "'furl', #{varname}.to_s"    
-            when 'integer', 'double integer'
-                "'magn', [#{varname}].pack('l')"
-            when 'bounding rectangle' 
-                # QuickDraw Rectangle
-                "'qdrt', #{varname}.pack('S4')"
-            else
-                if enum_group_codes.has_key?(type)
-                    "'enum', #{varname}.code.to_4cc"
-                else     
-                    STDERR.puts "unrecognized type '#{type}'" if $DEBUG
-                    "'null', nil"
-                end
-        end
-        code << ')'
-        return code
+        "#{varname}.is_a?(OSA::Element) ? #{varname} : Element.from_rbobj('#{type}', #{varname}, #{enum_group_codes.inspect})" 
     end
 
     def self.escape_string(string)
@@ -728,3 +717,42 @@ EOC
         return string
     end
 end
+
+# String, force TEXT type to not get Unicode.
+OSA.add_conversion_to_ruby('TEXT', 'utxt') { |value, type, object| object.__data__('TEXT') }
+OSA.add_conversion_to_osa('string', 'text', 'Unicode text') { |value| ['TEXT', value.to_s] }
+
+# Signed/unsigned integer. 
+OSA.add_conversion_to_ruby('shor', 'long', 'comp') { |value| value.unpack('l').first }
+OSA.add_conversion_to_ruby('magn') { |value| value.unpack('d').first }
+OSA.add_conversion_to_osa('integer', 'double integer') { |value| ['magn', [value].pack('l')] }
+
+# Boolean.
+OSA.add_conversion_to_ruby('bool') { |value| value.unpack('c').first != 0 }
+OSA.add_conversion_to_osa('boolean') { |value| [(value ? 'true'.to_4cc : 'fals'.to_4cc), nil] }
+OSA.add_conversion_to_ruby('true') { |value| true }
+OSA.add_conversion_to_ruby('fals') { |value| false }
+
+# Date.
+OSA.add_conversion_to_ruby('ldt ') { |value| 
+  Date.new(1904, 1, 1) + Date.time_to_day_fraction(0, 0, value.unpack('q').first)
+}
+
+# Array.
+OSA.add_conversion_to_ruby('list') { |value, type, object| 
+  object.is_a?(OSA::ElementList) ? object.to_a.map { |x| x.to_rbobj } : object
+}
+
+# File name.
+# Let's use the 'furl' type here instead of 'alis', as we don't have a way to produce an alias for a file that does not exist yet.
+OSA.add_conversion_to_osa('alias', 'file') { |value| ['furl', value.to_s] }
+
+# Hash.
+OSA.add_conversion_to_ruby('reco') { |value, type, object| object.is_a?(OSA::ElementRecord) ? object.to_hash : self }
+
+# Enumerator.
+OSA.add_conversion_to_ruby('enum') { |value, type, object| OSA::Enumerator.enum_for_code(object.__data__('TEXT')) or self }
+
+# QuickDraw Rectangle, aka "bounding rectangle".
+OSA.add_conversion_to_ruby('qdrt') { |value| value.unpack('S4') }
+OSA.add_conversion_to_osa('bounding rectangle') { |value| ['qdrt', value.pack('S4')] }

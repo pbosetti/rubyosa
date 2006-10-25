@@ -239,18 +239,17 @@ module OSA
     #######
 
     class DocItem
-        attr_reader :name, :description, :type
-        def initialize(name, description, type=nil)
+        attr_reader :name, :description
+        def initialize(name, description)
             @name = name
             @description = description
-            @type = type
         end
     end
 
     class DocMethod < DocItem
         attr_reader :result, :args
         def initialize(name, description, result, args)
-            super(name, description, nil)
+            super(name, description)
             @result = result
             @args = args
         end
@@ -272,19 +271,19 @@ module OSA
         self.const_set(rubyfy_constant_string(name), app_module)
 
         # Retrieves and creates enumerations.
-        enum_group_codes = []
+        enum_group_codes = {} 
         doc.find('/dictionary/suite/enumeration').each do |element|
             enum_group_code = element['code']
-            enum_group_codes << enum_group_code
-            enum_module_name = rubyfy_constant_string(element['name']).upcase
+            enum_module_name = rubyfy_constant_string(element['name'], true)
             enum_module = Module.new
+            enum_group_codes[enum_group_code] = enum_module
             
             documentation = [] 
-            enum_module.const_set('DESCRIPTION', documentation)
+            enum_module.const_set(:DESCRIPTION, documentation)
  
             element.find('enumerator').each do |element|
                 name = element['name']
-                enum_name = rubyfy_constant_string(name).upcase
+                enum_name = rubyfy_constant_string(name, true)
                 enum_code = element['code']
                 enum_const = app_module.name + '::' + enum_module_name + '::' + enum_name
 
@@ -306,8 +305,18 @@ module OSA
         class_elements.values.flatten.each do |element| 
             klass = add_class_from_xml_element(element, class_elements, classes, app_module)
             methods_doc = []
-            klass.const_set('DESCRIPTION', englishify_sentence(element['description']))
-            klass.const_set('METHODS_DESCRIPTION', methods_doc)
+            description = englishify_sentence(element['description'])
+            if klass.const_defined?(:DESCRIPTION)
+                klass.const_set(:DESCRIPTION, description) if klass.const_get(:DESCRIPTION).nil?
+            else
+                klass.const_set(:DESCRIPTION, description)
+            end
+            if klass.const_defined?(:METHODS_DESCRIPTION)
+                methods_doc = klass.const_get(:METHODS_DESCRIPTION)
+            else
+                methods_doc = []
+                klass.const_set(:METHODS_DESCRIPTION, methods_doc)
+            end
 
             # Creates properties. 
             element.find('property').each do |pelement|
@@ -358,9 +367,16 @@ EOC
                 end
  
                 klass.class_eval(method_code)
-                ptype = (pklass or type)
-                ptypedoc = (pklass ? "a #{pklass} object" : type)
-                methods_doc << DocMethod.new(method_name, englishify_sentence("Gets the #{name} property -- #{description}"), DocItem.new('result', englishify_sentence("the property value, as #{ptypedoc}"), ptype), nil)
+                ptypedoc = if pklass.nil?
+                    if mod = enum_group_codes[type]
+                        "a #{mod} enumeration"
+                    else
+                        type
+                    end
+                else
+                    "a #{pklass} object"
+                end
+                methods_doc << DocMethod.new(method_name, englishify_sentence("Gets the #{name} property -- #{description}"), DocItem.new('result', englishify_sentence("the property value, as #{ptypedoc}")), nil)
 
                 # For the setter, always send an event.
                 if setter
@@ -377,7 +393,7 @@ end
 EOC
 
                     klass.class_eval(method_code)
-                    methods_doc << DocMethod.new(method_name, englishify_sentence("Sets the #{name} property -- #{description}"), nil, [DocItem.new('val', englishify_sentence("the value to be set, as #{ptypedoc}"), ptype)])
+                    methods_doc << DocMethod.new(method_name, englishify_sentence("Sets the #{name} property -- #{description}"), nil, [DocItem.new('val', englishify_sentence("the value to be set, as #{ptypedoc}"))])
                 end 
             end
 
@@ -414,7 +430,7 @@ end
 EOC
 
                 klass.class_eval(method_code)
-                methods_doc << DocMethod.new(method_name, englishify_sentence("Gets the #{eklass::PLURAL} associated with this object"), DocItem.new('result', englishify_sentence("an Array of #{eklass} objects"), eklass), nil)
+                methods_doc << DocMethod.new(method_name, englishify_sentence("Gets the #{eklass::PLURAL} associated with this object"), DocItem.new('result', englishify_sentence("an Array of #{eklass} objects")), nil)
             end
         end
 
@@ -519,7 +535,7 @@ EOC
             else
                 result_type = type_of_parameter(result)
                 result_klass = classes[result_type]
-                result_doc = DocItem.new('result', englishify_sentence(result['description']), (result_klass || result_type))
+                result_doc = DocItem.new('result', englishify_sentence(result['description']))
             end
 
             classes_to_define.each do |klass|
@@ -620,7 +636,7 @@ EOC
                 # QuickDraw Rectangle
                 "'qdrt', #{varname}.pack('S4')"
             else
-                if enum_group_codes.include?(type)
+                if enum_group_codes.has_key?(type)
                     "'enum', #{varname}.code.to_4cc"
                 else     
                     STDERR.puts "unrecognized type '#{type}'" if $DEBUG
@@ -631,12 +647,17 @@ EOC
         return code
     end
 
-    def self.rubyfy_constant_string(string)
-        string = 'C' << string if /^\d/.match(string)
-        rubyfy_string(string.capitalize.gsub(/\s(.)/) { |s| s[1].chr.upcase })
+    def self.rubyfy_constant_string(string, upcase=false)
+        if /^\d/.match(string)
+            string = 'C' << string 
+        else
+            string = string.dup
+            string[0] = string[0].chr.upcase
+        end
+        rubyfy_string(upcase ? string.upcase : string.gsub(/\s(.)/) { |s| s[1].chr.upcase })
     end
 
-    RUBY_RESERVED_KEYWORDS = ['for']
+    RUBY_RESERVED_KEYWORDS = ['for', 'in']
     def self.rubyfy_string(string, handle_ruby_reserved_keywords=false)
         # Prefix with '_' parameter names to avoid possible collisions with reserved Ruby keywords (for, etc...).
         if RUBY_RESERVED_KEYWORDS.include?(string)

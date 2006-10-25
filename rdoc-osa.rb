@@ -96,7 +96,7 @@ EOS
         end
         <<EOS
 # #{(obj.const_get('DESCRIPTION') || 'n/a')}
-class #{mod.name}::#{const_name}
+class #{obj.name} < #{obj.superclass}
 #{methods_desc.join.rstrip}
 end
 
@@ -121,6 +121,9 @@ end.
 join
 
 fake_ruby_src = <<EOS + fake_ruby_src
+# This documentation describes the RubyOSA API for the #{app.name} application. It has been automatically generated.
+#
+# For more information about RubyOSA, please visit the project homepage: http://rubyosa.rubyforge.org.
 module OSA; end
 # The #{app.name} module.
 module #{mod.name}; end

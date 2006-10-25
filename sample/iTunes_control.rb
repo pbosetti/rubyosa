@@ -42,13 +42,13 @@ begin
         when 'n'
             app.next_track
         when 'f'
-            if app.player_state == OSA::Itunes::EPLS::FAST_FORWARDING
+            if app.player_state == OSA::ITunes::EPLS::FAST_FORWARDING
                 app.resume
             else
                 app.fast_forward
             end
         when 'r'
-            if app.player_state == OSA::Itunes::EPLS::REWINDING
+            if app.player_state == OSA::ITunes::EPLS::REWINDING
                 app.resume
             else
                 app.rewind

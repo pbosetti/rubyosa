@@ -11,6 +11,8 @@ RubyOSA is an alternative to RubyAEOSA, and meant to replace it.
 RubyOSA is licensied under a BSD license, see the COPYRIGHT file for more 
 information.
 
+More information on the project home page: http://rubyosa.rubyforge.org.
+
 == Requirements ==
 
 Mac OS X 10.4.X or greater

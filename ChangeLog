@@ -17,7 +17,7 @@
 	- Retrieves documentation from the sdef ;
 	- Added a new tool (rdoc-osa) that generates RDoc documentation for the
 	  given application ;
-	- Fixed constant names generation.
+	- Improved constant/method names generation.
 
 	* sample/iTunes_control.rb:
 	Follow new constant naming.

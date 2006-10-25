@@ -648,6 +648,10 @@ EOC
         return code
     end
 
+    def self.escape_string(string)
+        string.gsub(/[\s\-\.\/]/, '_').gsub(/&/, 'and')
+    end
+
     def self.rubyfy_constant_string(string, upcase=false)
         if /^\d/.match(string)
             string = 'C' << string 
@@ -655,7 +659,7 @@ EOC
             string = string.dup
             string[0] = string[0].chr.upcase
         end
-        rubyfy_string(upcase ? string.upcase : string.gsub(/\s(.)/) { |s| s[1].chr.upcase })
+        escape_string(upcase ? string.upcase : string.gsub(/\s(.)/) { |s| s[1].chr.upcase })
     end
 
     RUBY_RESERVED_KEYWORDS = ['for', 'in']
@@ -664,7 +668,7 @@ EOC
         if RUBY_RESERVED_KEYWORDS.include?(string)
             '_' + string
         else
-            string.gsub(/[\s\-\.\/]/, '_').gsub(/&/, 'and')
+            escape_string(string).downcase
         end
     end
     

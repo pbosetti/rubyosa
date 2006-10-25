@@ -376,6 +376,7 @@ EOC
                 else
                     "a #{pklass} object"
                 end
+                description[0] = description[0].chr.downcase if description
                 methods_doc << DocMethod.new(method_name, englishify_sentence("Gets the #{name} property -- #{description}"), DocItem.new('result', englishify_sentence("the property value, as #{ptypedoc}")), nil)
 
                 # For the setter, always send an event.

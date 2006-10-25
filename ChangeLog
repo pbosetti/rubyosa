@@ -1,5 +1,8 @@
 2006-10-25  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* src/rbosa.c:
+	Do not inspect descriptors.
+
 	* src/lib/rbosa.rb,
 	  rdoc-osa.rb:
 	- Retrieves documentation from the sdef ;

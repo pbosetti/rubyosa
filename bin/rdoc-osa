@@ -124,6 +124,10 @@ join
 fake_ruby_src = <<EOS + fake_ruby_src
 # This documentation describes the RubyOSA API for the #{app.name} application. It has been automatically generated.
 #
+# The main class is #{mod.name}::Application, of which an instance is created likewise:
+#
+#   OSA.app('#{app.name}')
+#
 # For more information about RubyOSA, please visit the project homepage: http://rubyosa.rubyforge.org.
 module OSA; end
 # The #{app.name} module.

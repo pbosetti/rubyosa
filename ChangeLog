@@ -22,6 +22,9 @@
 	- Moved the rdoc-osa tool to ./bin ;
 	- Added support for 'type class' OSA parameters.
 
+	* sample/TextEdit_hello_world.rb:
+	Added new sample.
+
 	* README:
 	Revised.
 

@@ -29,14 +29,42 @@ require 'date'
 
 # Try to load RubyGems first, libxml-ruby may have been installed by it.
 begin require 'rubygems' rescue LoadError end
-require 'xml/libxml'
 
-# libxml-ruby bug workaround.
-class XML::Node
-    alias_method :old_cmp, :==
-    def ==(x)
-        (x != nil and old_cmp(x))
+# If libxml-ruby is not present, switch to REXML.
+USE_LIBXML = begin
+    require 'xml/libxml'
+
+    # libxml-ruby bug workaround.
+    class XML::Node
+        alias_method :old_cmp, :==
+        def ==(x)
+            (x != nil and old_cmp(x))
+        end
     end
+    true
+rescue LoadError
+    require 'rexml/document'
+
+    # REXML -> libxml-ruby compatibility layer.
+    class REXML::Element
+        alias_method :old_find, :find
+        def find(path=nil, &block)
+            if path.nil? and block
+                old_find { |*x| block.call(*x) }
+            else
+                list = []
+                ::REXML::XPath.each(self, path) { |e| list << e }
+                list
+            end
+        end
+        def [](attr)
+            attributes[attr]
+        end
+        def find_first(path)
+            ::REXML::XPath.first(self, path)
+        end
+    end
+    false
 end
 
 class String
@@ -262,9 +290,13 @@ module OSA
         @apps ||= {}
         app = @apps[signature]
         return app if app
-        parser = XML::Parser.new
-        parser.string = sdef
-        doc = parser.parse
+        doc = if USE_LIBXML
+            parser = XML::Parser.new
+            parser.string = sdef
+            parser.parse
+        else
+            REXML::Document.new(sdef)
+        end
 
         # Creates a module for this app, we will define the scripting interface within it.
         app_module = Module.new
@@ -696,4 +728,3 @@ EOC
         return string
     end
 end
-

@@ -1,4 +1,13 @@
+2006-10-25  Aaron Patterson  <aaron.patterson@gmail.com>
+
+	* src/lib/rbosa.rb:
+	Fall-back using REXML if libxml-ruby is not present.
+	Patch was slightly modified by Laurent Sansonetti.
+
 2006-10-25  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* AUTHORS:
+	Added Aaron.
 
 	* rubyosa.gemspec,
 	  bin/rdoc-osa,

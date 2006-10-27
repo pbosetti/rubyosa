@@ -723,15 +723,22 @@ OSA.add_conversion_to_ruby('TEXT', 'utxt') { |value, type, object| object.__data
 OSA.add_conversion_to_osa('string', 'text', 'Unicode text') { |value| ['TEXT', value.to_s] }
 
 # Signed/unsigned integer. 
-OSA.add_conversion_to_ruby('shor', 'long', 'comp') { |value| value.unpack('l').first }
+OSA.add_conversion_to_ruby('shor', 'long') { |value| value.unpack('l').first }
+OSA.add_conversion_to_ruby('comp') { |value| value.unpack('q').first }
 OSA.add_conversion_to_ruby('magn') { |value| value.unpack('d').first }
 OSA.add_conversion_to_osa('integer', 'double integer') { |value| ['magn', [value].pack('l')] }
+
+# Float
+OSA.add_conversion_to_ruby('sing') { |value| value.unpack('f').first }
 
 # Boolean.
 OSA.add_conversion_to_ruby('bool') { |value| value.unpack('c').first != 0 }
 OSA.add_conversion_to_osa('boolean') { |value| [(value ? 'true'.to_4cc : 'fals'.to_4cc), nil] }
 OSA.add_conversion_to_ruby('true') { |value| true }
 OSA.add_conversion_to_ruby('fals') { |value| false }
+
+# "Missing" values
+OSA.add_conversion_to_ruby('type') { |value| value == 'msng' ? nil : self }
 
 # Date.
 OSA.add_conversion_to_ruby('ldt ') { |value| 

@@ -1,3 +1,14 @@
+2006-09-28  James MacAulay  <jmacaulay@gmail.com>
+
+	* src/lib/rbosa.rb:
+	- Reverted to 0.0.11 handling of 'comp' objects (unpacked as Quad integers 
+	  again now) ;
+	- Added handling for 'sing' objects (they're floats) ;
+	- Added handling for when __type__ is 'type' and __data__ is 'msng'.
+	  It seems that this is meant to suggest "missing" values, since this is 
+	  exactly where they pop up in iTunes track properties (in an uninitialized
+	  long_description, for example)...so I just made them turn into nils.
+
 2006-10-28  Jean-Pierre M.  <jeanpierre@gmail.com>
 
 	* sample/*.rb:

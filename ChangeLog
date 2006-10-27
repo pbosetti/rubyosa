@@ -1,3 +1,12 @@
+2006-10-28  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* TODO:
+	Updated.
+
+	* src/lib/rbosa.rb:
+	Fixed generated code for methods taking an enumeration-like parameter.
+	This fixes #6350.
+
 2006-10-27  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* sample/iChat_uptime.rb:

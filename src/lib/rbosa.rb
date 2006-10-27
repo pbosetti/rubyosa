@@ -666,7 +666,7 @@ EOC
         if md = /^list_of_(.+)$/.match(type)
             return "#{varname}.is_a?(OSA::Element) ? #{varname} : ElementList.__new__(#{varname}.to_a.map { |x| #{new_element_code(md[1], 'x', enum_group_codes)} })"
         end
-        "#{varname}.is_a?(OSA::Element) ? #{varname} : Element.from_rbobj('#{type}', #{varname}, #{enum_group_codes.inspect})" 
+        "#{varname}.is_a?(OSA::Element) ? #{varname} : Element.from_rbobj('#{type}', #{varname}, #{enum_group_codes.keys.inspect})" 
     end
 
     def self.escape_string(string)

@@ -1,5 +1,6 @@
 # Simple iTunes controller.
 
+begin require 'rubygems' rescue LoadError end
 require 'rbosa'
 require 'curses'
 include Curses

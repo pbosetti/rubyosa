@@ -1,5 +1,6 @@
 # Start playing, then fade the volume from 0 to the original setting.
 
+begin require 'rubygems' rescue LoadError end
 require 'rbosa'
 
 app = OSA.app('iTunes')

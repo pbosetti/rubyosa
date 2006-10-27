@@ -1,3 +1,9 @@
+2006-10-28  Jean-Pierre M.  <jeanpierre@gmail.com>
+
+	* sample/*.rb:
+	Try to require 'rubygems' in samples, as RubyOSA may have been
+	installed as a gem.
+
 2006-10-28  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* TODO:

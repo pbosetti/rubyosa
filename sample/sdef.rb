@@ -1,5 +1,6 @@
 # Print the given application's sdef(5).
 
+begin require 'rubygems' rescue LoadError end
 require 'rbosa'
 require 'rexml/document'
 

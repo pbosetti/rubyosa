@@ -1,5 +1,6 @@
 # Periodically set your iChat status to the output of uptime(1). 
 
+begin require 'rubygems' rescue LoadError end
 require 'rbosa'
 
 app = OSA.app('iChat')

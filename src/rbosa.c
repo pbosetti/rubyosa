@@ -27,6 +27,7 @@
  */ 
 
 #include "rbosa.h"
+#include <st.h>
 
 static VALUE mOSA;
 static VALUE cOSAElement;
@@ -482,6 +483,42 @@ rbosa_elementlist_size (VALUE self)
     return INT2FIX (__rbosa_elementlist_count ((AEDescList *)rbosa_element_aedesc (self)));
 }
 
+static int
+__rbosa_elementrecord_set (VALUE key, VALUE value, AEDescList *list)
+{
+    OSErr       error;
+
+    error = AEPutKeyDesc (list, RVAL2FOURCHAR (key), rbosa_element_aedesc (value));
+    if (error != noErr) 
+        rb_raise (rb_eRuntimeError, "Cannot set value %p for key %p of record %p: %s (%d)", 
+                  value, key, list, GetMacOSStatusErrorString (error), error);
+ 
+    return ST_CONTINUE;
+}
+
+static VALUE
+rbosa_elementrecord_new (int argc, VALUE *argv, VALUE self)
+{
+    OSErr           error;
+    AEDescList      list;
+    VALUE           hash;
+
+    rb_scan_args (argc, argv, "01", &hash);
+
+    if (!NIL_P (hash))
+        Check_Type (hash, T_HASH);
+
+    error = AECreateList (NULL, 0, true, &list);
+    if (error != noErr) 
+        rb_raise (rb_eRuntimeError, "Cannot create Apple Event descriptor list : %s (%d)", 
+                  GetMacOSStatusErrorString (error), error);
+
+    if (!NIL_P (hash)) 
+        rb_hash_foreach (hash, __rbosa_elementrecord_set, (VALUE)&list);
+    
+    return rbosa_element_make (self, &list, Qnil);
+}
+
 static VALUE
 rbosa_elementrecord_to_a (VALUE self)
 {
@@ -541,6 +578,7 @@ Init_osa (void)
     rb_define_method (cOSAElementList, "add", rbosa_elementlist_add, 1);
 
     cOSAElementRecord = rb_define_class_under (mOSA, "ElementRecord", cOSAElement);
+    rb_define_singleton_method (cOSAElementRecord, "__new__", rbosa_elementrecord_new, -1);
     rb_define_method (cOSAElementRecord, "to_a", rbosa_elementrecord_to_a, 0);
 
     mOSAEventDispatcher = rb_define_module_under (mOSA, "EventDispatcher");

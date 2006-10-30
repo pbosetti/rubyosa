@@ -1,3 +1,9 @@
+2006-10-30  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* src/lib/rbosa.rb,
+	  src/rbosa.c:
+	Added support to convert Hash objects to OSA 'record' types.
+
 2006-09-28  James MacAulay  <jmacaulay@gmail.com>
 
 	* src/lib/rbosa.rb:

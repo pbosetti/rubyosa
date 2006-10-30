@@ -112,7 +112,8 @@ class OSA::Element
     end
     
     def self.from_rbobj(requested_type, value, enum_group_codes)
-      self.__new__(*OSA.convert_to_osa(requested_type, value, enum_group_codes))
+      obj = OSA.convert_to_osa(requested_type, value, enum_group_codes)
+      obj.is_a?(OSA::Element) ? obj : self.__new__(*obj)
     end
 end
 
@@ -245,12 +246,33 @@ module OSA
     end
 
     def self.convert_to_osa(requested_type, value, enum_group_codes=nil)
+        if requested_type.nil?
+            case value
+            when OSA::Element
+                return value
+            when String
+                requested_type = 'text'
+            when Array
+                requested_type = 'list'
+            when Hash
+                requested_type = 'record'
+            when Integer
+                requested_type = 'integer'
+            else
+                STDERR.puts "can't determine OSA type for #{value}" if $VERBOSE
+                ['null', nil]
+            end
+        end
+
         if conversion = @conversions_to_osa[requested_type]
             args = [value, requested_type]
             conversion.call(*args[0..(conversion.arity - 1)])
         elsif enum_group_codes and enum_group_codes.include?(requested_type)
             ['enum', value.code.to_4cc]
-        else     
+        elsif md = /^list_of_(.+)$/.match(requested_type)
+            ary = value.to_a.map { |x| convert_to_osa(md[1], x, enum_group_codes) }
+            ElementList.__new__(ary)
+        else
             STDERR.puts "unrecognized type #{requested_type}" if $VERBOSE
             ['null', nil]
         end
@@ -663,9 +685,6 @@ EOC
     end
 
     def self.new_element_code(type, varname, enum_group_codes)
-        if md = /^list_of_(.+)$/.match(type)
-            return "#{varname}.is_a?(OSA::Element) ? #{varname} : ElementList.__new__(#{varname}.to_a.map { |x| #{new_element_code(md[1], 'x', enum_group_codes)} })"
-        end
         "#{varname}.is_a?(OSA::Element) ? #{varname} : Element.from_rbobj('#{type}', #{varname}, #{enum_group_codes.keys.inspect})" 
     end
 
@@ -756,6 +775,14 @@ OSA.add_conversion_to_osa('alias', 'file') { |value| ['furl', value.to_s] }
 
 # Hash.
 OSA.add_conversion_to_ruby('reco') { |value, type, object| object.is_a?(OSA::ElementRecord) ? object.to_hash : self }
+OSA.add_conversion_to_osa('record') do |value| 
+    if value.is_a?(Hash)
+        value.each { |key, val| value[key] = OSA::Element.from_rbobj(nil, val, nil) } 
+        OSA::ElementRecord.__new__(value)
+    else
+        self
+    end 
+end
 
 # Enumerator.
 OSA.add_conversion_to_ruby('enum') { |value, type, object| OSA::Enumerator.enum_for_code(object.__data__('TEXT')) or self }

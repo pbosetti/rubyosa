@@ -28,7 +28,7 @@ require 'osa'
 require 'date'
 
 # Try to load RubyGems first, libxml-ruby may have been installed by it.
-begin require 'rubygems' rescue LoadError end
+begin require 'rubygems'; rescue LoadError; end
 
 # If libxml-ruby is not present, switch to REXML.
 USE_LIBXML = begin

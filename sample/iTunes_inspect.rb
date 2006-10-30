@@ -1,6 +1,6 @@
 # Quick inspection of iTunes' sources, playlists and tracks.
 
-begin require 'rubygems' rescue LoadError end
+begin require 'rubygems'; rescue LoadError; end
 require 'rbosa'
 
 app = OSA.app('iTunes')

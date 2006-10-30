@@ -1,6 +1,11 @@
 2006-10-30  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/lib/rbosa.rb,
+	  sample/*.rb:
+	Changed the "require 'rubygems'..." expressions to make them compatible
+	with Ruby 1.8.2. 
+
+	* src/lib/rbosa.rb,
 	  src/rbosa.c:
 	Added support to convert Hash objects to OSA 'record' types.
 

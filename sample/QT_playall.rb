@@ -1,6 +1,6 @@
 # Opens given movies and in QuickTime and starts playing them indefinitely in fullscreen mode.
 
-begin require 'rubygems' rescue LoadError end
+begin require 'rubygems'; rescue LoadError; end
 require 'rbosa'
 
 if ARGV.empty?

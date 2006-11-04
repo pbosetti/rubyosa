@@ -26,6 +26,7 @@
 
 require 'osa'
 require 'date'
+require 'uri'
 
 # Try to load RubyGems first, libxml-ruby may have been installed by it.
 begin require 'rubygems'; rescue LoadError; end
@@ -772,6 +773,7 @@ OSA.add_conversion_to_ruby('list') { |value, type, object|
 # File name.
 # Let's use the 'furl' type here instead of 'alis', as we don't have a way to produce an alias for a file that does not exist yet.
 OSA.add_conversion_to_osa('alias', 'file') { |value| ['furl', value.to_s] }
+OSA.add_conversion_to_ruby('alis') { |value, type, object| URI.parse(object.__data__('furl')).path } 
 
 # Hash.
 OSA.add_conversion_to_ruby('reco') { |value, type, object| object.is_a?(OSA::ElementRecord) ? object.to_hash : self }

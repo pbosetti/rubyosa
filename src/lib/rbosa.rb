@@ -27,6 +27,7 @@
 require 'osa'
 require 'date'
 require 'uri'
+require 'iconv'
 
 # Try to load RubyGems first, libxml-ruby may have been installed by it.
 begin require 'rubygems'; rescue LoadError; end
@@ -70,7 +71,7 @@ end
 
 class String
     def to_4cc
-        OSA.__four_char_code__(self)
+        OSA.__four_char_code__(Iconv.iconv('MACROMAN', 'UTF-8', self).to_s)
     end
 end
 
@@ -488,7 +489,7 @@ def #{method_name}
     unless OSA.lazy_events?
         @app.__send_event__('core', 'getd', 
             [['----', Element.__new_object_specifier__(
-                '#{eklass::CODE}', @app == self ? Element.__new__('null', nil) : self,
+                '#{eklass::CODE}'.to_4cc, @app == self ? Element.__new__('null', nil) : self,
                 'indx', Element.__new__('abso', 'all '.to_4cc))]],
             true).to_rbobj
     else
@@ -592,6 +593,8 @@ EOC
                 p_def << defi
             end
 
+            code = Iconv.iconv('MACROMAN', 'UTF-8', code).to_s
+
             method_code = <<EOC
 def %METHOD_NAME%(#{p_dec.join(', ')})
   @app.__send_event__('#{code[0..3]}', '#{code[4..-1]}', [#{p_def.join(', ')}], #{result != nil})#{result != nil ? '.to_rbobj' : ''}
@@ -694,11 +697,12 @@ EOC
     end
 
     def self.rubyfy_constant_string(string, upcase=false)
-        if /^\d/.match(string)
-            string = 'C' << string 
-        else
-            string = string.dup
-            string[0] = string[0].chr.upcase
+        string = string.gsub(/[^\w\s]/, '')
+        first = string[0]
+        if (?a..?z).include?(first)
+            string[0] = first.chr.upcase
+        elsif !(?A..?Z).include?(first)
+            string.insert(0, 'C')
         end
         escape_string(upcase ? string.upcase : string.gsub(/\s(.)/) { |s| s[1].chr.upcase })
     end

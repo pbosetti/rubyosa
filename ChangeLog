@@ -1,3 +1,14 @@
+2006-11-19  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* src/lib/rbosa.rb:
+	- Convert four char codes to the Mac Roman encoding before using them,
+	  as otherwise they could be considered as 5 bytes strings (ex. BBEdit) ;
+	- Remove invalid characters when generating constants.
+
+	* sample/Finder_show_desktop.rb,
+	  sample/TextEdit_hello_world.rb:
+	Added new samples.
+
 2006-11-04  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/lib/rbosa.rb:

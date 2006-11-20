@@ -6,7 +6,7 @@
 	- Remove invalid characters when generating constants.
 
 	* sample/Finder_show_desktop.rb,
-	  sample/TextEdit_hello_world.rb:
+	  sample/BBEdit_unix_script.rb:
 	Added new samples.
 
 2006-11-04  Laurent Sansonetti  <lsansonetti@apple.com>

@@ -239,7 +239,7 @@ module OSA
     end
     
     def self.convert_to_ruby(osa_object)
-        osa_type = osa_object.__type__.to_s
+        osa_type = osa_object.__type__
         osa_data = osa_object.__data__(osa_type) if osa_type and osa_type != 'null'
         if conversion = @conversions_to_ruby[osa_type]
             args = [osa_data, osa_type, osa_object]
@@ -761,9 +761,6 @@ OSA.add_conversion_to_osa('boolean') { |value| [(value ? 'true'.to_4cc : 'fals'.
 OSA.add_conversion_to_ruby('true') { |value| true }
 OSA.add_conversion_to_ruby('fals') { |value| false }
 
-# "Missing" values
-OSA.add_conversion_to_ruby('type') { |value| value == 'msng' ? nil : self }
-
 # Date.
 OSA.add_conversion_to_ruby('ldt ') { |value| 
   Date.new(1904, 1, 1) + Date.time_to_day_fraction(0, 0, value.unpack('q').first)
@@ -780,22 +777,37 @@ OSA.add_conversion_to_osa('alias', 'file') { |value| ['furl', value.to_s] }
 OSA.add_conversion_to_ruby('alis') { |value, type, object| URI.parse(object.__data__('furl')).path } 
 
 # Hash.
-OSA.add_conversion_to_ruby('reco') { |value, type, object| object.is_a?(OSA::ElementRecord) ? object.to_hash : self }
+OSA.add_conversion_to_ruby('reco') { |value, type, object| object.is_a?(OSA::ElementRecord) ? object.to_hash : value }
 OSA.add_conversion_to_osa('record') do |value| 
     if value.is_a?(Hash)
         value.each { |key, val| value[key] = OSA::Element.from_rbobj(nil, val, nil) } 
         OSA::ElementRecord.__new__(value)
     else
-        self
+        value 
     end 
 end
 
 # Enumerator.
-OSA.add_conversion_to_ruby('enum') { |value, type, object| OSA::Enumerator.enum_for_code(object.__data__('TEXT')) or self }
+OSA.add_conversion_to_ruby('enum') { |value, type, object| OSA::Enumerator.enum_for_code(object.__data__('TEXT')) or object }
 
 # Class.
-OSA.add_conversion_to_osa('type class') { |value| value.is_a?(Class) and value.ancestors.include?(OSA::Element) ? ['type', value::CODE.to_4cc] : self } 
+OSA.add_conversion_to_osa('type class') { |value| value.is_a?(Class) and value.ancestors.include?(OSA::Element) ? ['type', value::CODE.to_4cc] : value } 
+OSA.add_conversion_to_ruby('type') do |value, type, object| 
+  if value == 'msng' 
+    # Missing values.
+    nil
+  else
+    hash = object.instance_variable_get(:@app).instance_variable_get(:@classes)
+    hash[value] or value
+  end
+end
 
 # QuickDraw Rectangle, aka "bounding rectangle".
 OSA.add_conversion_to_ruby('qdrt') { |value| value.unpack('S4') }
 OSA.add_conversion_to_osa('bounding rectangle') { |value| ['qdrt', value.pack('S4')] }
+
+# Pictures (just return the raw data).
+OSA.add_conversion_to_ruby('PICT') { |value, type, object| value[222..-1] } # Removing trailing garbage.
+OSA.add_conversion_to_ruby('imaA') { |value, type, object| value }
+OSA.add_conversion_to_osa('Image') { |value| ['imaA', value.to_s] }
+OSA.add_conversion_to_osa('TIFF picture') { |value| ['imaA', value.to_s] }

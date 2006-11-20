@@ -1,3 +1,17 @@
+2006-11-20  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* src/rbosa.c:
+	Make sure to swap the data of 'type' coerced descriptors.
+
+	* src/lib/rbosa.rb:
+	- Better translation of 'type' from OSA to Ruby ;
+	- Support for some picture types ;
+	- Fixed conversion handlers to not use 'self'.
+
+	* sample/iTunes_artwork.rb,
+	  sample/iChat_image.rb:
+	Added new samples.
+
 2006-11-19  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/lib/rbosa.rb:

@@ -285,18 +285,24 @@ rbosa_element_data (int argc, VALUE *argv, VALUE self)
     void *      data;
     Size        datasize;
     VALUE       retval;
+    bool        to_4cc;
 
     rb_scan_args (argc, argv, "01", &coerce_type);
+    to_4cc = false;
 
     desc  = rbosa_element_aedesc (self);
     
     if (!NIL_P (coerce_type)) {
-        error = AECoerceDesc (desc, RVAL2FOURCHAR (coerce_type), &coerced_desc);
+        FourCharCode code;
+
+        code = RVAL2FOURCHAR (coerce_type);
+        error = AECoerceDesc (desc, code, &coerced_desc);
         if (error != noErr)
             rb_raise (rb_eRuntimeError, "Cannot coerce desc to type %s : %s (%d)", 
                       RVAL2CSTR (coerce_type), GetMacOSStatusErrorString (error), error);
         
         desc = &coerced_desc;
+        to_4cc = code == 'type';
     }
 
     datasize = AEGetDescDataSize (desc);
@@ -305,7 +311,14 @@ rbosa_element_data (int argc, VALUE *argv, VALUE self)
         rb_fatal ("cannot allocate memory");
  
     error = AEGetDescData (desc, data, datasize);
-    retval = error == noErr ? rb_str_new (data, datasize) : Qnil;
+    if (error == noErr) {
+        if (to_4cc)
+            *(DescType*)data = CFSwapInt32HostToBig (*(DescType*)data);
+        retval = rb_str_new (data, datasize);
+    }
+    else {
+        retval = Qnil;
+    }
 
     if (!NIL_P (coerce_type))
         AEDisposeDesc (&coerced_desc); 

@@ -9,5 +9,6 @@ if artworks.size == 0
   exit 1
 end
 
-File.open('/tmp/foo.pict', 'w') { |io| io.write(artworks[0].data) }
-system("open -a Preview /tmp/foo.pict")
+fname = '/tmp/foo.' + artworks[0].format.downcase.strip
+File.open(fname, 'w') { |io| io.write(artworks[0].data) }
+system("open -a Preview #{fname}")

@@ -1,5 +1,8 @@
 2006-11-20  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* README:
+	Revised.
+
 	* src/rbosa.c:
 	Make sure to swap the data of 'type' coerced descriptors.
 

@@ -33,7 +33,10 @@ The rdoc-osa tool can be used to generate API reference documentation
 for the given application. See its --help flag for more information
 about how to use it.
 
-Feel free to send feedback to lsansonetti@apple.com.
+Feel free to send feedback to rubyosa-discuss@rubyforge.org.
+
+You can also file bugs, patches and feature requests to the tracker:
+http://rubyforge.org/tracker/?group_id=1845.
 
 When reporting a bug, please set the AEDebugSends and AEDebugReceives 
 environment variables to 1 and attach the logs. 

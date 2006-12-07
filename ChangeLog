@@ -1,3 +1,10 @@
+2006-12-07  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* src/lib/rbosa.rb:
+	- Suffix method names that are already registered with an integer value
+	  instead of prefixing with 'osa_' as there might be more than 2 duplicates ;
+	- Register the ID property if not already defined.
+
 2006-11-20  Jean-Pierre M.  <jeanpierre@gmail.com>
 
 	* sample/iTunes_artwork.rb:

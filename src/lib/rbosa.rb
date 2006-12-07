@@ -155,6 +155,10 @@ class OSA::ObjectSpecifierList
     end
     alias_method :size, :length
 
+    def empty?
+        length == 0
+    end
+
     def [](idx)
         idx += 1 # AE starts counting at 1.
         o = obj_spec_with_key(OSA::Element.__new__('long', [idx].pack('l')))
@@ -387,12 +391,18 @@ module OSA
             end
 
             # Creates properties. 
-            element.find('property').each do |pelement|
-                name = pelement['name']
-                code = pelement['code']
-                type = pelement['type']
-                access = pelement['access']
-                description = pelement['description']
+            # Add basic properties that might be missing to the Item class (if any).
+            props = {}
+            element.find('property').each do |x| 
+                props[x['name']] = [x['code'], x['type'], x['access'], x['description']]
+            end
+            if klass.name[-6..-1] == '::Item'
+                unless props.has_key?('id')
+                    props['id'] = ['ID  ', 'integer', 'r', 'the unique ID of the item']
+                end
+            end
+            props.each do |name, pary|
+                code, type, access, description = pary
                 setter = (access == nil or access.include?('w'))
 
                 if type == 'reference'
@@ -433,7 +443,7 @@ def #{method_name}
 end
 EOC
                 end
- 
+
                 klass.class_eval(method_code)
                 ptypedoc = if pklass.nil?
                     if mod = enum_group_codes[type]
@@ -452,11 +462,12 @@ EOC
                     method_name = rubyfy_method(name, klass, type, true)
                     method_code = <<EOC
 def #{method_name}(val)
-    @app.__send_event__('core', 'setd', 
+    res = @app.__send_event__('core', 'setd', 
         [['----', Element.__new_object_specifier__('prop', @app == self ? Element.__new__('null', nil) : self, 
                                                    'prop', Element.__new__('type', '#{code}'.to_4cc))],
          ['data', #{new_element_code(type, 'val', enum_group_codes)}]],
         true)
+p res.__type__
     return nil
 end
 EOC
@@ -718,17 +729,19 @@ EOC
     end
     
     def self.rubyfy_method(string, klass, return_type=nil, setter=false)
-        s = rubyfy_string(string) 
+        base = rubyfy_string(string) 
         if setter
             # Suffix setters with '='.
-            s << '='
+            base << '='
         elsif return_type == 'boolean'
             # Suffix predicates with '?'. 
-            s << '?'
+            base << '?'
         end
-        # Prefix with 'osa_' in case the class already has a method with such a name.
-        if klass.method_defined?(s)
-            s = 'osa_' + s
+        # Suffix with an integer if the class already has a method with such a name.
+        i, s = 2, base
+        while klass.method_defined?(s)
+            s = base + i.to_s
+            i += 1
         end
         return s
     end
@@ -808,6 +821,7 @@ OSA.add_conversion_to_osa('bounding rectangle') { |value| ['qdrt', value.pack('S
 
 # Pictures (just return the raw data).
 OSA.add_conversion_to_ruby('PICT') { |value, type, object| value[222..-1] } # Removing trailing garbage.
+OSA.add_conversion_to_osa('picture') { |value| ['PICT', value.to_s] }
 OSA.add_conversion_to_ruby('imaA') { |value, type, object| value }
 OSA.add_conversion_to_osa('Image') { |value| ['imaA', value.to_s] }
 OSA.add_conversion_to_osa('TIFF picture') { |value| ['imaA', value.to_s] }

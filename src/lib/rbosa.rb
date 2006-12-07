@@ -462,12 +462,11 @@ EOC
                     method_name = rubyfy_method(name, klass, type, true)
                     method_code = <<EOC
 def #{method_name}(val)
-    res = @app.__send_event__('core', 'setd', 
+    @app.__send_event__('core', 'setd', 
         [['----', Element.__new_object_specifier__('prop', @app == self ? Element.__new__('null', nil) : self, 
                                                    'prop', Element.__new__('type', '#{code}'.to_4cc))],
          ['data', #{new_element_code(type, 'val', enum_group_codes)}]],
         true)
-p res.__type__
     return nil
 end
 EOC

@@ -24,6 +24,8 @@
 # IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
+$KCODE = 'u' # we will use UTF-8 strings
+
 require 'osa'
 require 'date'
 require 'uri'
@@ -728,19 +730,20 @@ EOC
     end
     
     def self.rubyfy_method(string, klass, return_type=nil, setter=false)
-        base = rubyfy_string(string) 
-        if setter
-            # Suffix setters with '='.
-            base << '='
-        elsif return_type == 'boolean'
-            # Suffix predicates with '?'. 
-            base << '?'
-        end
-        # Suffix with an integer if the class already has a method with such a name.
-        i, s = 2, base
-        while klass.method_defined?(s)
-            s = base + i.to_s
+        base = rubyfy_string(string)
+        s, i = base.dup, 1
+        loop do
+            if setter
+                # Suffix setters with '='.
+                s << '='
+            elsif return_type == 'boolean'
+                # Suffix predicates with '?'. 
+                s << '?'
+            end
+            break unless klass.method_defined?(s)
+            # Suffix with an integer if the class already has a method with such a name.
             i += 1
+            s = base + i.to_s
         end
         return s
     end
@@ -754,9 +757,9 @@ EOC
     end
 end
 
-# String, force TEXT type to not get Unicode.
-OSA.add_conversion_to_ruby('TEXT', 'utxt') { |value, type, object| object.__data__('TEXT') }
-OSA.add_conversion_to_osa('string', 'text', 'Unicode text') { |value| ['TEXT', value.to_s] }
+# String, force utf8 type to get UTF-8.
+OSA.add_conversion_to_ruby('TEXT', 'utxt') { |value, type, object| object.__data__('utf8') }
+OSA.add_conversion_to_osa('string', 'text', 'Unicode text') { |value| ['utf8', value.to_s] }
 
 # Signed/unsigned integer. 
 OSA.add_conversion_to_ruby('shor', 'long') { |value| value.unpack('l').first }

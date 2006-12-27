@@ -11,5 +11,9 @@ textedit.make(OSA::TextEdit::Document, nil, nil, {:ctxt => 'Hello World #1'})
 # Easier way.
 textedit.make(OSA::TextEdit::Document).text = 'Hello World #2'
 
-# Easiest way.
-OSA::TextEdit::Document.new.text = 'Hello World #3'
+=begin
+# Easiest way, not implemented for now.
+document = OSA::TextEdit::Document.new
+document.text = 'Hello World #3'
+textedit << document
+=end

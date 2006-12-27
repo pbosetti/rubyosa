@@ -1,4 +1,34 @@
 =============
+RubyOSA 0.2.0
+=============
+
+Features:
+- Now using UTF-8 for strings by default ;
+- Added support for some picture types ;
+- Translate 'alis' OSA types to Ruby file paths ;
+- Added new samples: Finder_show_desktop, BBEdit_unix_script, iTunes_artwork
+  and iChat_images ;
+- Added support to convert Hash objects to OSA 'record' types ;
+- Added support for floating 'sing' and missing 'msng' types.
+
+Bugfixes:
+- Added 'class' to the list of reserved Ruby keywords to prefix when generating
+  method parameters ;
+- Suffix method names that are already registered with an integer value
+  instead of prefixing with 'osa_' as there might be more than 2 duplicates ;
+- Register the ID property if not already defined ;
+- Fixed conversion handlers to not use 'self' ;
+- Make sure to swap the data of 'type' coerced descriptors ;
+- Convert four char codes to the Mac Roman encoding before using them,
+  as otherwise they could be considered as 5 bytes strings (ex. BBEdit) ;
+- Remove invalid characters when generating constants ;
+- Changed the "require 'rubygems'..." expressions to make them compatible with 
+  Ruby 1.8.2 ;
+- Try to require 'rubygems' in samples, as RubyOSA may have been
+  installed as a gem ;
+- Fixed generated code for methods taking an enumeration-like parameter. 
+
+=============
 RubyOSA 0.1.0
 =============
 

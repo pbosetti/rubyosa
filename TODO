@@ -1,10 +1,8 @@
-For the first public release:
-
+For the next public release:
 Further releases:
 
+[ ] Get rid of module_eval calls by using Module#define_method to create 
+    methods.
 [ ] Check type consistency of given method args.
 [ ] Investigate unrecognized types (especially 'location reference').
 [ ] Use hash-like syntax for optional parameters.
-[ ] Unicode support.
-[ ] Get rid of module_eval calls by using Module#define_method to create 
-    methods.

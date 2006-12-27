@@ -719,10 +719,10 @@ EOC
         escape_string(upcase ? string.upcase : string.gsub(/\s(.)/) { |s| s[1].chr.upcase })
     end
 
-    RUBY_RESERVED_KEYWORDS = ['for', 'in']
+    RUBY_RESERVED_KEYWORDS = ['for', 'in', 'class']
     def self.rubyfy_string(string, handle_ruby_reserved_keywords=false)
         # Prefix with '_' parameter names to avoid possible collisions with reserved Ruby keywords (for, etc...).
-        if RUBY_RESERVED_KEYWORDS.include?(string)
+        if handle_ruby_reserved_keywords and RUBY_RESERVED_KEYWORDS.include?(string)
             '_' + string
         else
             escape_string(string).downcase

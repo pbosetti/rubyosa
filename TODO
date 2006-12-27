@@ -6,3 +6,4 @@ Further releases:
 [ ] Check type consistency of given method args.
 [ ] Investigate unrecognized types (especially 'location reference').
 [ ] Use hash-like syntax for optional parameters.
+[ ] Add a possibility to merge sdef additions to an application object.

@@ -3,8 +3,8 @@ RubyOSA 0.2.0
 =============
 
 Features:
-- Now using UTF-8 for strings by default ;
 - Added support for some picture types ;
+- Possible to use UTF-8 strings ;
 - Translate 'alis' OSA types to Ruby file paths ;
 - Added new samples: Finder_show_desktop, BBEdit_unix_script, iTunes_artwork
   and iChat_images ;
@@ -12,6 +12,7 @@ Features:
 - Added support for floating 'sing' and missing 'msng' types.
 
 Bugfixes:
+- Handle application errors and convert them as Ruby exceptions ;
 - Added 'class' to the list of reserved Ruby keywords to prefix when generating
   method parameters ;
 - Suffix method names that are already registered with an integer value

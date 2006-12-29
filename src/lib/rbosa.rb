@@ -759,7 +759,7 @@ end
 
 # String, for unicode stuff force utf8 type if specified.
 OSA.add_conversion_to_ruby('TEXT') { |value, type, object| object.__data__('TEXT') }
-OSA.add_conversion_to_ruby('utxt', 'utf8') { |value, type, object| object.__data__(OSA.utf8_strings ? type : 'TEXT') }
+OSA.add_conversion_to_ruby('utxt', 'utf8') { |value, type, object| object.__data__(OSA.utf8_strings ? 'utf8' : 'TEXT') }
 OSA.add_conversion_to_osa('string', 'text') { |value| ['TEXT', value.to_s] }
 OSA.add_conversion_to_osa('Unicode text') { |value| [OSA.utf8_strings ? 'utf8' : 'TEXT', value.to_s] }
 

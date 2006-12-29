@@ -4,6 +4,7 @@ begin require 'rubygems'; rescue LoadError; end
 require 'rbosa'
 
 app = OSA.app('iTunes')
+OSA.utf8_strings = true
 app.sources.each do |source|
     puts source.name
     source.playlists.each do |playlist|

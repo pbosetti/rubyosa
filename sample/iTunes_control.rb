@@ -6,6 +6,7 @@ require 'curses'
 include Curses
 
 app = OSA.app('iTunes')
+OSA.utf8_strings = true
 
 if app.current_track.nil?
     # We don't support write access now, so...

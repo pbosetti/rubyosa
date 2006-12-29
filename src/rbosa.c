@@ -195,6 +195,54 @@ rbosa_element_new_os (VALUE self, VALUE desired_class, VALUE container, VALUE ke
     return rbosa_element_make (self, &obj_specifier, Qnil);
 }
 
+static void
+__rbosa_raise_potential_app_error (AEDesc *reply)
+{
+    OSErr   error;
+    AEDesc  errorNumDesc;
+    AEDesc  errorStringDesc;
+    int     errorNum;
+    char    exception[128];
+
+    if (AEGetParamDesc (reply, keyErrorNumber, typeInteger, &errorNumDesc) != noErr)
+        return; 
+
+    if (AEGetDescData (&errorNumDesc, &errorNum, sizeof errorNum) != noErr
+        || (errorNum = CFSwapInt32HostToBig (errorNum)) == 0) {
+
+        AEDisposeDesc (&errorNumDesc);
+        return;
+    }
+
+    /* The reply is an application error. */
+
+    exception[0] = '\0';
+    error = AEGetParamDesc (reply, keyErrorString, typeChar, &errorStringDesc);
+    if (error == noErr) {
+        Size size;
+
+        size = AEGetDescDataSize (&errorStringDesc);
+        if (size > 0) {
+            char *msg;
+
+            msg = (char *)malloc (size);
+            if (msg != NULL) {
+                if (AEGetDescData (&errorStringDesc, &msg, size) == noErr)
+                    snprintf (exception, sizeof exception, "application returned error %d with message '%s'", errorNum, msg);
+                free (msg);
+            }
+        }
+        AEDisposeDesc (&errorStringDesc);
+    }
+
+    if (exception[0] == '\0')
+        snprintf (exception, sizeof exception, "application returned error %d", errorNum);
+
+    AEDisposeDesc (&errorNumDesc);
+
+    rb_raise (rb_eRuntimeError, exception);
+}
+
 static VALUE
 rbosa_app_send_event (VALUE self, VALUE event_class, VALUE event_id, VALUE params, VALUE need_retval)
 {
@@ -249,6 +297,8 @@ rbosa_app_send_event (VALUE self, VALUE event_class, VALUE event_id, VALUE param
     if (error != noErr)
         rb_raise (rb_eRuntimeError, "Cannot send Apple Event '%s%s' : %s (%d)", 
                   RVAL2CSTR (event_class), RVAL2CSTR (event_id), GetMacOSStatusErrorString (error), error);
+
+    __rbosa_raise_potential_app_error (&reply);
 
     if (RTEST (need_retval)) {
         VALUE   rb_reply;
@@ -599,4 +649,5 @@ Init_osa (void)
 
     rbosa_define_param ("timeout", INT2NUM (kAEDefaultTimeout));
     rbosa_define_param ("lazy_events", Qtrue);
+    rbosa_define_param ("utf8_strings", Qfalse);
 }

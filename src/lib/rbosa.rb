@@ -757,9 +757,11 @@ EOC
     end
 end
 
-# String, force utf8 type to get UTF-8.
-OSA.add_conversion_to_ruby('TEXT', 'utxt') { |value, type, object| object.__data__('utf8') }
-OSA.add_conversion_to_osa('string', 'text', 'Unicode text') { |value| ['utf8', value.to_s] }
+# String, for unicode stuff force utf8 type if specified.
+OSA.add_conversion_to_ruby('TEXT') { |value, type, object| object.__data__('TEXT') }
+OSA.add_conversion_to_ruby('utxt', 'utf8') { |value, type, object| object.__data__(OSA.utf8_strings ? type : 'TEXT') }
+OSA.add_conversion_to_osa('string', 'text') { |value| ['TEXT', value.to_s] }
+OSA.add_conversion_to_osa('Unicode text') { |value| [OSA.utf8_strings ? 'utf8' : 'TEXT', value.to_s] }
 
 # Signed/unsigned integer. 
 OSA.add_conversion_to_ruby('shor', 'long') { |value| value.unpack('l').first }
@@ -826,4 +828,4 @@ OSA.add_conversion_to_ruby('PICT') { |value, type, object| value[222..-1] } # Re
 OSA.add_conversion_to_osa('picture') { |value| ['PICT', value.to_s] }
 OSA.add_conversion_to_ruby('imaA') { |value, type, object| value }
 OSA.add_conversion_to_osa('Image') { |value| ['imaA', value.to_s] }
-OSA.add_conversion_to_osa('TIFF picture') { |value| ['imaA', value.to_s] }
+OSA.add_conversion_to_osa('TIFF picture') { |value| ['TIFF', value.to_s] }

@@ -4,12 +4,10 @@ RubyOSA 0.2.0
 
 Features:
 - Added support for some picture types ;
-- Possible to use UTF-8 strings ;
-- Translate 'alis' OSA types to Ruby file paths ;
+- Possible to use UTF-8 strings (if OSA.utf8_strings is set to true) ;
 - Added new samples: Finder_show_desktop, BBEdit_unix_script, iTunes_artwork
   and iChat_images ;
-- Added support to convert Hash objects to OSA 'record' types ;
-- Added support for floating 'sing' and missing 'msng' types.
+- Translate file paths, Hashes, floating types and missing types. 
 
 Bugfixes:
 - Handle application errors and convert them as Ruby exceptions ;
@@ -21,7 +19,7 @@ Bugfixes:
 - Fixed conversion handlers to not use 'self' ;
 - Make sure to swap the data of 'type' coerced descriptors ;
 - Convert four char codes to the Mac Roman encoding before using them,
-  as otherwise they could be considered as 5 bytes strings (ex. BBEdit) ;
+  as otherwise they could be considered as more-than-4-bytes strings ;
 - Remove invalid characters when generating constants ;
 - Changed the "require 'rubygems'..." expressions to make them compatible with 
   Ruby 1.8.2 ;

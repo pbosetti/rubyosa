@@ -1,5 +1,16 @@
 2007-02-07  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* tests/testall.rb,
+	  src/lib/rbosa.rb,
+	  src/rbosa.c,
+	  src/rbosa_sdef.c,
+	  src/rbosa.h,
+	  src/rbosa_conv.c,
+	  COPYRIGHT,
+	  extconf.rb,
+	  bin/rdoc-osa:
+	Updated copyright date to 2007.
+
 	* AUTHORS:
 	Added Stefan.
 

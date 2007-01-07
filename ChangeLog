@@ -1,5 +1,12 @@
 2007-02-07  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* sample/AddressBook_inspect.rb:
+	Modified to handle application-level errors that Address Book could
+	raise when trying to format malformed addresses.
+
+	* src/rbosa.c:
+	Fixed handling of application-level errors.
+
 	* tests/testall.rb,
 	  src/lib/rbosa.rb,
 	  src/rbosa.c,

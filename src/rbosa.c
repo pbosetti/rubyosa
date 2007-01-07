@@ -225,10 +225,12 @@ __rbosa_raise_potential_app_error (AEDesc *reply)
         if (size > 0) {
             char *msg;
 
-            msg = (char *)malloc (size);
+            msg = (char *)malloc (size + 1);
             if (msg != NULL) {
-                if (AEGetDescData (&errorStringDesc, &msg, size) == noErr)
+                if (AEGetDescData (&errorStringDesc, msg, size) == noErr) {
+                    msg[size] = '\0';
                     snprintf (exception, sizeof exception, "application returned error %d with message '%s'", errorNum, msg);
+                }
                 free (msg);
             }
         }

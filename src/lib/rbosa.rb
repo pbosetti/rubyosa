@@ -518,7 +518,6 @@ EOC
         # Having an 'application' class is required.
         app_class = classes['application']
         raise "No application class defined." if app_class.nil?
-p app_class
 
         # Maps commands to the right classes.
         all_classes_but_app = classes.values.reject { |x| x.ancestors.include?(OSA::EventDispatcher) }

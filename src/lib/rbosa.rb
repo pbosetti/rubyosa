@@ -791,7 +791,9 @@ OSA.add_conversion_to_ruby('list') { |value, type, object|
 # File name.
 # Let's use the 'furl' type here instead of 'alis', as we don't have a way to produce an alias for a file that does not exist yet.
 OSA.add_conversion_to_osa('alias', 'file') { |value| ['furl', value.to_s] }
-OSA.add_conversion_to_ruby('alis') { |value, type, object| URI.parse(object.__data__('furl')).path } 
+OSA.add_conversion_to_ruby('alis') do |value, type, object| 
+  URI.unescape(URI.parse(object.__data__('furl')).path)
+end 
 
 # Hash.
 OSA.add_conversion_to_ruby('reco') { |value, type, object| object.is_a?(OSA::ElementRecord) ? object.to_hash : value }

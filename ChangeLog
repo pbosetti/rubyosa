@@ -1,3 +1,8 @@
+2007-02-11  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* src/lib/rbosa.rb:
+	Make sure the converted 'alis' paths are unescaped. Thanks James MacAulay. 
+
 2007-02-07  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* sample/AddressBook_inspect.rb:

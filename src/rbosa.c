@@ -204,7 +204,7 @@ __rbosa_raise_potential_app_error (AEDesc *reply)
     int     errorNum;
     char    exception[128];
 
-    if (AEGetParamDesc (reply, keyErrorNumber, typeInteger, &errorNumDesc) != noErr)
+    if (AEGetParamDesc (reply, keyErrorNumber, typeSInt32, &errorNumDesc) != noErr)
         return; 
 
     if (AEGetDescData (&errorNumDesc, &errorNum, sizeof errorNum) != noErr

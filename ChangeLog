@@ -1,14 +1,19 @@
-2007-02-17  Laurent Sansonetti  <lsansonetti@apple.com>
+2007-01-21  Mike Naberezny <mike@maintainable.com>
+
+ * sample/:
+ Sorted samples into subdirectories by application.
+
+2007-01-17  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/rbosa.c:
 	Fixed 64-bit build.
 
-2007-02-11  Laurent Sansonetti  <lsansonetti@apple.com>
+2007-01-11  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/lib/rbosa.rb:
 	Make sure the converted 'alis' paths are unescaped. Thanks James MacAulay. 
 
-2007-02-07  Laurent Sansonetti  <lsansonetti@apple.com>
+2007-01-07  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* sample/AddressBook_inspect.rb:
 	Modified to handle application-level errors that Address Book could
@@ -31,7 +36,7 @@
 	* AUTHORS:
 	Added Stefan.
 
-2007-02-07  Stefan Saasen  <s@juretta.com>
+2007-01-07  Stefan Saasen  <s@juretta.com>
 
 	* sample/AddressBook_inspect.rb:
 	New sample code, that prints all contacts in the Address Book.  

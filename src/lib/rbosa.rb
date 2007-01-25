@@ -278,7 +278,10 @@ module OSA
         elsif enum_group_codes and enum_group_codes.include?(requested_type)
             ['enum', value.code.to_4cc]
         elsif md = /^list_of_(.+)$/.match(requested_type)
-            ary = value.to_a.map { |x| convert_to_osa(md[1], x, enum_group_codes) }
+            ary = value.to_a.map do |elem| 
+                obj = convert_to_osa(md[1], elem, enum_group_codes) 
+                obj.is_a?(OSA::Element) ? obj : OSA::Element.__new__(*obj)
+            end
             ElementList.__new__(ary)
         else
             STDERR.puts "unrecognized type #{requested_type}" if $VERBOSE

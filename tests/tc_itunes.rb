@@ -26,6 +26,7 @@
 
 require 'test/unit'
 require 'tempfile'
+require 'fileutils'
 require 'rbosa'
 require 'as'
 
@@ -111,6 +112,19 @@ class TC_iTunes < Test::Unit::TestCase
       # TODO: do the same thing in AppleScript and compare the generated files
     ensure
       f.unlink
+    end
+  end
+
+  def test_add_track_to_playlist
+    track = @itunes.sources[0].library_playlists[0].file_tracks[0]
+    assert_kind_of(OSA::ITunes::FileTrack, track)
+    FileUtils.cp(track.location, '/tmp/foo.mp3')
+    begin
+      track2 = @itunes.add('/tmp/foo.mp3')
+      assert_kind_of(OSA::ITunes::FileTrack, track2)
+      assert_equal(track.location, track2.location)
+    ensure
+      FileUtils.rm_f('/tmp/foo.mp3')
     end
   end
 end

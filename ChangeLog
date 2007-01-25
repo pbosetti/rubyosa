@@ -1,7 +1,8 @@
 2007-01-25  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/lib/rbosa.rb:
-	Added OSA -> Ruby 'TIFF' conversion.
+	- Added OSA -> Ruby 'TIFF' conversion ;
+	- Fixed the Ruby -> OSA 'list_of_*' conversion.
 
 	* tests/tc_itunes.rb,
 	  tests/tc_ichat.rb,

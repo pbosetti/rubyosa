@@ -829,5 +829,6 @@ OSA.add_conversion_to_osa('bounding rectangle') { |value| ['qdrt', value.pack('S
 OSA.add_conversion_to_ruby('PICT') { |value, type, object| value[222..-1] } # Removing trailing garbage.
 OSA.add_conversion_to_osa('picture') { |value| ['PICT', value.to_s] }
 OSA.add_conversion_to_ruby('imaA') { |value, type, object| value }
+OSA.add_conversion_to_ruby('TIFF') { |value, type, object| value }
 OSA.add_conversion_to_osa('Image') { |value| ['imaA', value.to_s] }
 OSA.add_conversion_to_osa('TIFF picture') { |value| ['TIFF', value.to_s] }

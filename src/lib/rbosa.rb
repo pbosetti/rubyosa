@@ -705,7 +705,7 @@ EOC
     end
 
     def self.escape_string(string)
-        string.gsub(/[\s\-\.\/]/, '_').gsub(/&/, 'and')
+        string.gsub(/[\$\=\s\-\.\/]/, '_').gsub(/&/, 'and')
     end
 
     def self.rubyfy_constant_string(string, upcase=false)

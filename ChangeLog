@@ -1,7 +1,17 @@
+2007-01-25  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* AUTHORS:
+	Added Michail.
+
+2007-01-25  Michail Pishchagin  <mblsha@gmail.com>
+
+	* src/lib/rbosa.rb:
+	Make sure '$' and '=' are escaped.
+
 2007-01-21  Mike Naberezny <mike@maintainable.com>
 
- * sample/:
- Sorted samples into subdirectories by application.
+	* sample/:
+	Sorted samples into subdirectories by application.
 
 2007-01-17  Laurent Sansonetti  <lsansonetti@apple.com>
 

@@ -41,6 +41,9 @@ FourCharCode rbobj_to_fourchar (VALUE obj);
 VALUE rbosa_four_char_code (VALUE self, VALUE val);
 void rbobj_to_alias_handle (VALUE obj, AliasHandle *alias);
 
+/* rbosa_err.c */
+const char *error_code_to_string (const int code);
+
 /* helper macros */
 #define RVAL2CSTR(x)        (StringValueCStr (x))
 #define CSTR2RVAL(x)        (rb_str_new2 (x))

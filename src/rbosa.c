@@ -202,19 +202,22 @@ __rbosa_raise_potential_app_error (AEDesc *reply)
     AEDesc  errorNumDesc;
     AEDesc  errorStringDesc;
     int     errorNum;
+    const char *  errorMsg;
     char    exception[128];
 
     if (AEGetParamDesc (reply, keyErrorNumber, typeSInt32, &errorNumDesc) != noErr)
         return; 
 
-    if (AEGetDescData (&errorNumDesc, &errorNum, sizeof errorNum) != noErr
-        || (errorNum = CFSwapInt32HostToBig (errorNum)) == 0) {
-
+    if (AEGetDescData (&errorNumDesc, &errorNum, sizeof errorNum) != noErr) {
         AEDisposeDesc (&errorNumDesc);
         return;
     }
 
     /* The reply is an application error. */
+
+    errorMsg = error_code_to_string(errorNum);
+    if (errorMsg == NULL)
+        errorMsg = "Unknown error";
 
     exception[0] = '\0';
     error = AEGetParamDesc (reply, keyErrorString, typeChar, &errorStringDesc);
@@ -229,7 +232,7 @@ __rbosa_raise_potential_app_error (AEDesc *reply)
             if (msg != NULL) {
                 if (AEGetDescData (&errorStringDesc, msg, size) == noErr) {
                     msg[size] = '\0';
-                    snprintf (exception, sizeof exception, "application returned error %d with message '%s'", errorNum, msg);
+                    snprintf (exception, sizeof exception, "application returned error: %s (%d), with message: %s", errorMsg, errorNum, msg);
                 }
                 free (msg);
             }
@@ -238,7 +241,7 @@ __rbosa_raise_potential_app_error (AEDesc *reply)
     }
 
     if (exception[0] == '\0')
-        snprintf (exception, sizeof exception, "application returned error %d", errorNum);
+        snprintf (exception, sizeof exception, "application returned error: %s (%d)", errorMsg, errorNum);
 
     AEDisposeDesc (&errorNumDesc);
 

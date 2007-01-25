@@ -1,10 +1,16 @@
 2007-01-25  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* src/rbosa_err.c,
+	  src/rbosa.c,
+	  src/rbosa.h:
+	Better application-level error handling. Now converting the error numbers to
+	human-readable sentences. 
+
 	* tests/tc_textedit.rb,
 	  src/lib/rbosa_properties.rb,
 	  src/lib/rbosa.rb:
-	Added translation support for property codes. Now translating them
-	when converting records from OSA to Ruby (as a Hash object). Added
+	Added translation support for property codes. Now translating themi when 
+	converting when converting records from OSA to Ruby (as a Hash object). Added
 	a text case.
 
 	* src/lib/rbosa.rb:

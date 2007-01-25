@@ -1,5 +1,11 @@
 2007-01-25  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* tests/tc_itunes.rb,
+	  tests/tc_ichat.rb,
+	  tests/as.rb:
+	Added some new tests to check RubyOSA with iTunes and iChat.
+	Uses NSAppleScript through RubyCocoa to verify what has been done.
+
 	* AUTHORS:
 	Added Michail.
 

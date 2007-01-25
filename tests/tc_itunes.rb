@@ -33,9 +33,6 @@ require 'as'
 class TC_iTunes < Test::Unit::TestCase
   def setup
     @itunes = OSA.app_with_name('iTunes')
-    if @itunes.current_track.nil?
-      raise "Please select a track in iTunes"
-    end
   end
 
   def do_as(str)

@@ -1,5 +1,12 @@
 2007-01-25  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* tests/tc_textedit.rb,
+	  src/lib/rbosa_properties.rb,
+	  src/lib/rbosa.rb:
+	Added translation support for property codes. Now translating them
+	when converting records from OSA to Ruby (as a Hash object). Added
+	a text case.
+
 	* src/lib/rbosa.rb:
 	- Added OSA -> Ruby 'TIFF' conversion ;
 	- Fixed the Ruby -> OSA 'list_of_*' conversion.

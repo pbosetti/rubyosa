@@ -131,7 +131,10 @@ end
 class OSA::ElementRecord
     def to_hash
         h = {}
-        self.to_a.each { |key, val| h[key] = val.to_rbobj }
+        self.to_a.each do |code, val|
+            key = (OSA.code_to_sym(code) or code)
+            h[key] = val.to_rbobj
+        end 
         return h
     end
 end
@@ -835,3 +838,5 @@ OSA.add_conversion_to_ruby('imaA') { |value, type, object| value }
 OSA.add_conversion_to_ruby('TIFF') { |value, type, object| value }
 OSA.add_conversion_to_osa('Image') { |value| ['imaA', value.to_s] }
 OSA.add_conversion_to_osa('TIFF picture') { |value| ['TIFF', value.to_s] }
+
+require 'rbosa_properties'

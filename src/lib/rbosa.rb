@@ -116,8 +116,8 @@ class OSA::Element
     end
     
     def self.from_rbobj(requested_type, value, enum_group_codes)
-      obj = OSA.convert_to_osa(requested_type, value, enum_group_codes)
-      obj.is_a?(OSA::Element) ? obj : self.__new__(*obj)
+        obj = OSA.convert_to_osa(requested_type, value, enum_group_codes)
+        obj.is_a?(OSA::Element) ? obj : self.__new__(*obj)
     end
 end
 
@@ -153,7 +153,7 @@ class OSA::ObjectSpecifierList
     end
    
     def length
-        @length ||= @app.__send_event__(
+        @app.__send_event__(
             'core', 'cnte', 
             [['----', @container], ['kocl', OSA::Element.__new__('type', @desired_class::CODE.to_4cc)]], 
             true).to_rbobj

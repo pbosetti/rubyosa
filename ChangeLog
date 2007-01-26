@@ -1,5 +1,12 @@
 2007-01-26  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* tests/tc_textedit.rb,
+	  src/lib/rbosa.rb,
+	  src/rbosa.c,
+	  TODO:
+	Added support for some 'location reference' types (before/after a given 
+	descriptor). Added some test cases.
+
 	* COPYRIGHT,
 	  */**/*.{rb,c,h}:
 	Updated copyright marks.

@@ -38,4 +38,27 @@ class TC_TextEdit < Test::Unit::TestCase
     assert_equal(prop[:name], 'TextEdit')
     assert_equal(prop[:class], OSA::TextEdit::Application)
   end
+
+  def test_duplicate_delete_words
+    doc = @textedit.make(OSA::TextEdit::Document)
+    begin
+      assert_kind_of(OSA::TextEdit::Document, doc)
+      doc.text = 'a c b'
+      w = doc.text.paragraphs[0].words
+      assert_equal(3, w.size)
+      assert_equal(%w{a c b}, w.get)
+      w[2].duplicate(w[0].after)
+      w[0].duplicate(w[1].before)
+      assert_equal(%w{a abc b}, w.get)
+      w[0].delete
+      assert_equal(2, w.size)
+      assert_equal(%w{abc b}, w.get)
+      w[1].delete
+      assert_equal(1, w.size)
+      assert_equal(%w{abc}, w.get)
+      assert_equal(' abc ', doc.text.get)
+    ensure
+      doc.close
+    end
+  end
 end

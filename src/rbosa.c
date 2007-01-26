@@ -387,6 +387,37 @@ rbosa_element_data (int argc, VALUE *argv, VALUE self)
 }
 
 static VALUE
+__rbosa_insertion_loc_new (VALUE rcv, FourCharCode code)
+{
+    AEDesc *  self_desc;
+    AEDesc    rec;
+    AEDesc    pos_desc;
+    AEDesc    new_desc;
+
+    self_desc = rbosa_element_aedesc (rcv);
+    AECreateList (NULL, 0, true, &rec);
+    AEPutParamDesc (&rec, keyAEObject, self_desc);
+    AECreateDesc (code, NULL, 0, &pos_desc);
+    AEPutParamPtr (&rec, keyAEPosition, typeEnumerated, &pos_desc, 4);
+    AECoerceDesc (&rec, typeInsertionLoc, &new_desc);
+    AEDisposeDesc (&rec);
+
+    return rbosa_element_make (cOSAElement, &new_desc, Qnil);
+}
+
+static VALUE
+rbosa_element_after (VALUE self)
+{
+    return __rbosa_insertion_loc_new (self, kAEAfter); 
+}
+
+static VALUE
+rbosa_element_before (VALUE self)
+{
+    return __rbosa_insertion_loc_new (self, kAEBefore);
+}
+
+static VALUE
 rbosa_element_eql (VALUE self, VALUE other)
 {
     AEDesc *    self_desc;
@@ -633,6 +664,8 @@ Init_osa (void)
     rb_define_singleton_method (cOSAElement, "__new_object_specifier__", rbosa_element_new_os, 4);
     rb_define_method (cOSAElement, "__type__", rbosa_element_type, 0);
     rb_define_method (cOSAElement, "__data__", rbosa_element_data, -1);
+    rb_define_method (cOSAElement, "before", rbosa_element_before, 0);
+    rb_define_method (cOSAElement, "after", rbosa_element_after, 0);
     rb_define_method (cOSAElement, "==", rbosa_element_eql, 1);
 #if INSPECT_AEDESC
     rb_define_method (cOSAElement, "inspect", rbosa_element_inspect, 0);

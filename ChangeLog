@@ -1,3 +1,9 @@
+2007-01-26  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* COPYRIGHT,
+	  */**/*.{rb,c,h}:
+	Updated copyright marks.
+
 2007-01-25  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/rbosa_err.c,

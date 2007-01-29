@@ -136,7 +136,6 @@ EOS
 
 path = unique_tmp_path(app.name, '.rb')
 File.open(path, 'w') { |io| io.puts fake_ruby_src }
-puts path;exit
 line = "rdoc #{ARGV[2..-1].join(' ')} \"#{path}\""
 unless system(line)
     STDERR.puts "Error when executing `#{line}' : #{$?}"

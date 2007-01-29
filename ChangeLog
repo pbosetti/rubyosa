@@ -1,5 +1,11 @@
 2007-01-29  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* tests/tc_ichat.rb,
+	  src/lib/rbosa.rb,
+	  bin/rdoc-osa:
+	- Fixed properties returning 'list_of_*' types (and added some tests cases) ;
+	- Small RDoc fixes.
+
 	* tests/tc_textedit.rb,
 	  src/lib/rbosa.rb,
 	  TODO:

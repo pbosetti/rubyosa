@@ -402,7 +402,7 @@ module OSA
             # Add basic properties that might be missing to the Item class (if any).
             props = {}
             element.find('property').each do |x| 
-                props[x['name']] = [x['code'], x['type'], x['access'], x['description']]
+                props[x['name']] = [x['code'], type_of_parameter(x), x['access'], x['description']]
             end
             if klass.name[-6..-1] == '::Item'
                 unless props.has_key?('id')
@@ -450,16 +450,15 @@ module OSA
 
                 klass.class_eval { define_method(method_name, method_proc) }
                 ptypedoc = if pklass.nil?
-                    if mod = enum_group_codes[type]
-                        "a #{mod} enumeration"
-                    else
-                        type
-                    end
+                    type_doc(type, enum_group_codes, app_module)
                 else
                     "a #{pklass} object"
                 end
-                description[0] = description[0].chr.downcase if description
-                methods_doc << DocMethod.new(method_name, englishify_sentence("Gets the #{name} property -- #{description}"), DocItem.new('result', englishify_sentence("the property value, as #{ptypedoc}")), nil)
+                if description
+                    description[0] = description[0].chr.downcase
+                    description = '-- ' << description
+                end 
+                methods_doc << DocMethod.new(method_name, englishify_sentence("Gets the #{name} property #{description}"), DocItem.new('result', englishify_sentence("the property value, as #{ptypedoc}")), nil)
 
                 # For the setter, always send an event.
                 if setter
@@ -708,6 +707,21 @@ module OSA
         return klass
     end
     
+    def self.type_doc(type, enum_group_codes, app_module)
+        if mod = enum_group_codes[type]
+            mod.to_s 
+        elsif md = /^list_of_(.+)$/.match(type)
+            "list of #{type_doc(md[1], enum_group_codes, app_module)}"
+        else
+            up_type = type.upcase
+            begin
+                app_module.const_get(up_type).to_s
+            rescue 
+                type
+            end
+        end
+    end
+
     def self.type_of_parameter(element)
         type = element['type']
         if type.nil?
@@ -718,10 +732,6 @@ module OSA
             type = "list_of_#{type}" if etype['list'] == 'yes'
         end
         return type
-    end
-
-    def self.new_element_code(type, varname, enum_group_codes)
-        "#{varname}.is_a?(OSA::Element) ? #{varname} : Element.from_rbobj('#{type}', #{varname}, #{enum_group_codes.keys.inspect})" 
     end
 
     def self.escape_string(string)
@@ -771,6 +781,7 @@ module OSA
     def self.englishify_sentence(string)
         return '' if string.nil?
         string[0] = string[0].chr.upcase
+        string.strip!
         last = string[-1].chr
         string << '.' if last != '.' and last != '?' and last != '!'
         return string

@@ -38,6 +38,15 @@ class TC_iChat < Test::Unit::TestCase
     AS.do_as("tell application \"iChat\"\n#{str}\nend tell")
   end
 
+  def test_accounts
+    accounts = @ichat.accounts
+    assert(accounts.size > 0)
+    assert_kind_of(String, accounts[0].name)
+    ary = accounts[0].capabilities
+    assert_kind_of(Array, ary)
+    assert(ary.all? { |x| x.is_a?(OSA::Enumerator) })
+  end
+
   def test_set_status
     old_status = @ichat.status_message
     assert_kind_of(String, old_status)

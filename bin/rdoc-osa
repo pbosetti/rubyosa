@@ -68,6 +68,8 @@ msg = case ARGV.first
         usage
 end
 
+DOC_NOT_AVAILABLE = 'Documentation not available.'
+
 app = OSA.send(msg, ARGV[1])
 mod = OSA.const_get(app.class.name.scan(/^OSA::(.+)::Application$/).to_s)
 fake_ruby_src = mod.constants.map do |const_name|
@@ -81,13 +83,17 @@ fake_ruby_src = mod.constants.map do |const_name|
                 args_doc = method.args.map do |x| 
                     arg = x.name.dup
                     optional = arg.sub!(/=.+$/, '') != nil
-                    "  # #{arg}::\n  #    #{x.description}" + (optional ? ' Optional.' : '')
+                    desc = x.description
+                    desc = DOC_NOT_AVAILABLE if desc.empty?
+                    "  # #{arg}::\n  #    #{desc}" + (optional ? ' Optional.' : '')
                 end.join("\n")
                 args_def = '(' + method.args.map { |x| x.name }.join(', ') + ')'
             end
             if method.result
                 args_doc << "\n" unless args_doc.empty?
-                args_doc << "  # Returns::\n  #    #{method.result.description}\n"
+                desc = method.result.description
+                desc = DOC_NOT_AVAILABLE if desc.empty?
+                args_doc << "  # Returns::\n  #    #{desc}\n"
             end
             <<EOS
   # #{method.description}

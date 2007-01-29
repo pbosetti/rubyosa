@@ -84,13 +84,13 @@ class TC_TextEdit < Test::Unit::TestCase
     begin
       doc.text = 'foo bar'
       FileUtils.rm_rf('/tmp/foo.rtf')
-      doc.save('RTF', '/tmp/foo.rtf')
-      @textedit.documents.each { |d| d.close }
+      doc.close(OSA::TextEdit::SAVO::YES, '/tmp/foo.rtf')
       assert_equal(0, @textedit.documents.size)
       @textedit.open('/tmp/foo.rtf')
       doc = @textedit.documents[0]
       assert_equal('foo bar', doc.text.get)
     ensure
+      FileUtils.rm_rf('/tmp/foo.rtf')
       @textedit.documents.each { |d| d.close }
     end
   end
@@ -100,13 +100,13 @@ class TC_TextEdit < Test::Unit::TestCase
     begin
       doc.text = 'foo bar'
       FileUtils.rm_rf('/tmp/foo.rtf')
-      doc.save(:as => 'RTF', :in => '/tmp/foo.rtf')
-      @textedit.documents.each { |d| d.close }
+      doc.close(:saving => OSA::TextEdit::SAVO::YES, :saving_in => '/tmp/foo.rtf')
       assert_equal(0, @textedit.documents.size)
       @textedit.open('/tmp/foo.rtf')
       doc = @textedit.documents[0]
       assert_equal('foo bar', doc.text.get)
     ensure
+      FileUtils.rm_rf('/tmp/foo.rtf')
       @textedit.documents.each { |d| d.close }
     end
   end

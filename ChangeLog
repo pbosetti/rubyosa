@@ -1,3 +1,12 @@
+2007-01-29  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* tests/tc_textedit.rb,
+	  tests/as.rb,
+	  tests/tc_get_app.rb,
+	  src/lib/rbosa.rb,
+	  TODO:
+	Get rid of costly evalulations. Added more test cases.
+
 2007-01-26  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* tests/tc_textedit.rb,

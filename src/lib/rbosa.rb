@@ -428,31 +428,27 @@ module OSA
                 # Implicit 'get' if the property class is primitive (not defined in the sdef),
                 # otherwise just return an object specifier.
                 method_name = rubyfy_method(name, klass, type)
-                method_code = if pklass.nil?
-                    <<EOC
-def #{method_name}
-    @app.__send_event__('core', 'getd', 
-        [['----', Element.__new_object_specifier__('prop', @app == self ? Element.__new__('null', nil) : self, 
-                                                   'prop', Element.__new__('type', '#{code}'.to_4cc))]],
-        true).to_rbobj
-end
-EOC
+                method_proc = if pklass.nil?
+                    proc do 
+                        @app.__send_event__('core', 'getd', 
+                            [['----', Element.__new_object_specifier__('prop', @app == self ? Element.__new__('null', nil) : self, 
+                            'prop', Element.__new__('type', code.to_4cc))]],
+                            true).to_rbobj
+                    end
                 else
-                    <<EOC
-def #{method_name}
-    o = #{pklass.name}.__new_object_specifier__('prop', @app == self ? Element.__new__('null', nil) : self, 
-                                                'prop', Element.__new__('type', '#{code}'.to_4cc))
-    unless OSA.lazy_events?
-        @app.__send_event__('core', 'getd', [['----', o]], true).to_rbobj
-    else
-        o.instance_variable_set(:@app, @app)
-        o.extend(OSA::ObjectSpecifier)
-    end
-end
-EOC
+                    proc do  
+                        o = pklass.__new_object_specifier__('prop', @app == self ? Element.__new__('null', nil) : self, 
+                                                                    'prop', Element.__new__('type', code.to_4cc))
+                        unless OSA.lazy_events?
+                            @app.__send_event__('core', 'getd', [['----', o]], true).to_rbobj
+                        else
+                            o.instance_variable_set(:@app, @app)
+                            o.extend(OSA::ObjectSpecifier)
+                        end
+                    end
                 end
 
-                klass.class_eval(method_code)
+                klass.class_eval { define_method(method_name, method_proc) }
                 ptypedoc = if pklass.nil?
                     if mod = enum_group_codes[type]
                         "a #{mod} enumeration"
@@ -468,18 +464,15 @@ EOC
                 # For the setter, always send an event.
                 if setter
                     method_name = rubyfy_method(name, klass, type, true)
-                    method_code = <<EOC
-def #{method_name}(val)
-    @app.__send_event__('core', 'setd', 
-        [['----', Element.__new_object_specifier__('prop', @app == self ? Element.__new__('null', nil) : self, 
-                                                   'prop', Element.__new__('type', '#{code}'.to_4cc))],
-         ['data', #{new_element_code(type, 'val', enum_group_codes)}]],
-        true)
-    return nil
-end
-EOC
-
-                    klass.class_eval(method_code)
+                    method_proc = proc do |val|
+                        @app.__send_event__('core', 'setd', 
+                            [['----', Element.__new_object_specifier__('prop', @app == self ? Element.__new__('null', nil) : self, 
+                                                                       'prop', Element.__new__('type', code.to_4cc))],
+                             ['data', val.is_a?(OSA::Element) ? val : Element.from_rbobj(type, val, enum_group_codes.keys)]],
+                            true)
+                        return nil
+                    end
+                    klass.class_eval { define_method(method_name, method_proc) }
                     methods_doc << DocMethod.new(method_name, englishify_sentence("Sets the #{name} property -- #{description}"), nil, [DocItem.new('val', englishify_sentence("the value to be set, as #{ptypedoc}"))])
                 end 
             end
@@ -502,21 +495,18 @@ EOC
                 end
 
                 method_name = rubyfy_method(eklass::PLURAL, klass)
-                method_code = <<EOC
-def #{method_name}
-    unless OSA.lazy_events?
-        @app.__send_event__('core', 'getd', 
-            [['----', Element.__new_object_specifier__(
-                '#{eklass::CODE}'.to_4cc, @app == self ? Element.__new__('null', nil) : self,
-                'indx', Element.__new__('abso', 'all '.to_4cc))]],
-            true).to_rbobj
-    else
-        ObjectSpecifierList.new(@app, #{eklass}, @app == self ? Element.__new__('null', nil) : self)
-    end
-end
-EOC
-
-                klass.class_eval(method_code)
+                method_proc = proc do
+                    unless OSA.lazy_events?
+                        @app.__send_event__('core', 'getd', 
+                            [['----', Element.__new_object_specifier__(
+                                eklass::CODE.to_4cc, @app == self ? Element.__new__('null', nil) : self,
+                                'indx', Element.__new__('abso', 'all '.to_4cc))]],
+                            true).to_rbobj
+                    else
+                        ObjectSpecifierList.new(@app, eklass, @app == self ? Element.__new__('null', nil) : self)
+                    end
+                end
+                klass.class_eval { define_method(method_name, method_proc) }
                 methods_doc << DocMethod.new(method_name, englishify_sentence("Gets the #{eklass::PLURAL} associated with this object"), DocItem.new('result', englishify_sentence("an Array of #{eklass} objects")), nil)
             end
         end
@@ -534,6 +524,7 @@ EOC
             code = element['code']
             direct_parameter = element.find_first('direct-parameter')
             result = element.find_first('result')           
+            has_result = result != nil
  
             classes_to_define = []
             forget_direct_parameter = true
@@ -573,53 +564,69 @@ EOC
             end
 
             params = []
+            params_doc = []
             unless direct_parameter.nil?
-                params << ['direct', 
-                           '----',
-                           direct_parameter['description'], 
-                           direct_parameter_optional,
-                           type_of_parameter(direct_parameter)]
+                pdesc = direct_parameter['description']
+                params << [
+                    'direct', 
+                    '----',
+                    direct_parameter_optional,
+                    type_of_parameter(direct_parameter)
+                ]
+                unless forget_direct_parameter
+                    params_doc << DocItem.new('direct', englishify_sentence(pdesc))
+                end
             end 
 
-            params.concat(element.find('parameter').to_a.map do |element|
-                [rubyfy_string(element['name'], true),
-                 element['code'],
-                 element['description'],
-                 parameter_optional?(element),
-                 type_of_parameter(element)]
-            end)
- 
-            p_dec, p_def, p_args_doc = [], [], []
-            already_has_optional_args = false # Once an argument is optional, all following arguments should be optional.
-            params.each do |pname, pcode, pdesc, optional, ptype|
-                decl = pname
-                self_direct = (pcode == '----' and forget_direct_parameter)
-                defi = if self_direct
-                    forget_direct_parameter ? "(self.is_a?(OSA::EventDispatcher) ? [] : ['----', self])" : "['----', self]"
-                else
-                    "['#{pcode}', #{new_element_code(ptype, pname, enum_group_codes)}]"
-                end
-                if already_has_optional_args or (optional and !self_direct)
-                    decl += '=nil'
-                    defi = "(#{pname} == nil ? [] : #{defi})"
-                    already_has_optional_args = true
-                end 
-                unless self_direct
-                    p_dec << decl 
-                    p_args_doc << DocItem.new(decl, englishify_sentence(pdesc)) 
-                end
-                p_def << defi
+            element.find('parameter').to_a.each do |element|
+                pname = rubyfy_string(element['name'], true)
+                pdesc = element['description']
+                params << [
+                    pname,
+                    element['code'],
+                    parameter_optional?(element),
+                    type_of_parameter(element)
+                ]
+                params_doc << DocItem.new(pname, englishify_sentence(pdesc)) 
             end
-
+ 
             code = Iconv.iconv('MACROMAN', 'UTF-8', code).to_s
 
-            method_code = <<EOC
-def %METHOD_NAME%(#{p_dec.join(', ')})
-  @app.__send_event__('#{code[0..3]}', '#{code[4..-1]}', [#{p_def.join(', ')}], #{result != nil})#{result != nil ? '.to_rbobj' : ''}
-end
-EOC
+            method_proc = proc do |*args_ary|
+                args = []
+                min_argc = i = 0
+                already_has_optional_args = false # Once an argument is optional, all following arguments should be optional.
+                params.each do |pname, pcode, optional, ptype|
+                    self_direct = (pcode == '----' and forget_direct_parameter)
+                    if already_has_optional_args or (optional and !self_direct)
+                        already_has_optional_args = true
+                    else
+                        min_argc += 1
+                        if args_ary.size < i
+                            raise ArgumentError, "wrong number of arguments (#{args_ary.size} for #{i})"
+                        end
+                    end
+                    val = if self_direct
+                        self.is_a?(OSA::EventDispatcher) ? [] : ['----', self]
+                    else
+                        arg = args_ary[i]
+                        i += 1
+                        if arg.nil? and already_has_optional_args
+                            []
+                        else
+                            [pcode, arg.is_a?(OSA::Element) ? arg : OSA::Element.from_rbobj(ptype, arg, enum_group_codes.keys)]
+                        end
+                    end
+                    args << val
+                end
+                if args_ary.size > params.size
+                    raise ArgumentError, "wrong number of arguments (#{args_ary.size} for #{min_argc})"
+                end
+                ret = @app.__send_event__(code[0..3], code[4..-1], args, has_result)
+                has_result ? ret.to_rbobj : ret
+            end
 
-            if result.nil?
+            unless has_result
                 result_type = result_doc = nil
             else
                 result_type = type_of_parameter(result)
@@ -629,20 +636,19 @@ EOC
 
             classes_to_define.each do |klass|
                 method_name = rubyfy_method(name, klass, result_type)
-                code = method_code.sub(/%METHOD_NAME%/, method_name)
-                klass.class_eval(code)
+                klass.class_eval { define_method(method_name, method_proc) }
                 methods_doc = klass.const_get(:METHODS_DESCRIPTION)
-                methods_doc << DocMethod.new(method_name, englishify_sentence(description), result_doc, p_args_doc)
+                methods_doc << DocMethod.new(method_name, englishify_sentence(description), result_doc, params_doc)
             end
         end
 
         # Returns an application instance, that's all folks!
         hash = {}
         classes.each_value { |klass| hash[klass::CODE] = klass } 
+        app_class.class_eval { attr_reader :sdef }
         app = app_class.__new__('sign', signature.to_4cc)
         app.instance_variable_set(:@sdef, sdef)
         app.instance_variable_set(:@classes, hash)
-        app.instance_eval 'def sdef; @sdef; end'
         app.extend OSA::EventDispatcher
         @apps[signature] = app
     end
@@ -680,7 +686,7 @@ EOC
                 end
             end
 
-            klass.class_eval 'include OSA::EventDispatcher' if real_name == 'application'
+            klass.class_eval { include OSA::EventDispatcher } if real_name == 'application'
 
             klass.const_set(:REAL_NAME, real_name) unless klass.const_defined?(:REAL_NAME)
             klass.const_set(:PLURAL, plural == nil ? real_name + 's' : plural) unless klass.const_defined?(:PLURAL)

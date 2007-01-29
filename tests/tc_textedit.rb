@@ -26,10 +26,15 @@
 
 require 'test/unit'
 require 'rbosa'
+require 'as'
 
 class TC_TextEdit < Test::Unit::TestCase
   def setup
     @textedit = OSA.app_with_name('TextEdit')
+  end
+
+  def do_as(str)
+    AS.do_as("tell application \"TextEdit\"\n#{str}\nend tell")
   end
 
   def test_app_properties
@@ -37,6 +42,29 @@ class TC_TextEdit < Test::Unit::TestCase
     assert_kind_of(Hash, prop)
     assert_equal(prop[:name], 'TextEdit')
     assert_equal(prop[:class], OSA::TextEdit::Application)
+  end
+
+  def test_new_doc_set_text1
+    doc = @textedit.make(OSA::TextEdit::Document, nil, nil, {:ctxt => 'foo'})
+    begin
+      assert_kind_of(OSA::TextEdit::Document, doc)
+      assert_equal('foo', doc.text.get)
+      assert_equal('foo', do_as('get text of document 1'))
+    ensure
+      doc.close
+    end
+  end
+
+  def test_new_doc_set_text2
+    doc = @textedit.make(OSA::TextEdit::Document)
+    begin
+      assert_kind_of(OSA::TextEdit::Document, doc)
+      doc.text = 'foo'
+      assert_equal('foo', doc.text.get)
+      assert_equal('foo', do_as('get text of document 1'))
+    ensure
+      doc.close
+    end
   end
 
   def test_duplicate_delete_words

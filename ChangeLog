@@ -1,3 +1,23 @@
+2007-01-30  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* src/lib/rbosa.rb,
+	  src/rbosa.c,
+	  src/rbosa_sdef.c,
+	  src/rbosa.h,
+	  bin/rdoc-osa,
+	  sample/misc/sdef.rb,
+	  tests/tc_itunes.rb,
+	  tests/tc_ichat.rb,
+	  tests/tc_textedit.rb,
+	  tests/tc_get_app.rb,
+	  TODO:
+	- Added support for merging additional sdef to an existing application object
+	  by using the #merge method ;
+	- API change: OSA.app() now accept an inline Hash syntax with :by_name, 
+	  :by_path, :by_bundle_id and :by_signature keys/values. The old 
+	  OSA.app_with_* methods have been deprecated ;
+	- Updated samples and test cases to the new API.
+
 2007-01-29  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* tests/tc_ichat.rb,

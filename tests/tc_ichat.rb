@@ -31,7 +31,7 @@ require 'as'
 
 class TC_iChat < Test::Unit::TestCase
   def setup
-    @ichat = OSA.app_with_name('iChat')
+    @ichat = OSA.app('iChat')
   end
 
   def do_as(str)

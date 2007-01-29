@@ -656,7 +656,7 @@ Init_osa (void)
     sApp = rb_intern ("@app");
 
     mOSA = rb_define_module ("OSA");
-    rb_define_module_function (mOSA, "__scripting_info__", rbosa_scripting_info, 2); 
+    rb_define_module_function (mOSA, "__scripting_info__", rbosa_scripting_info, 1); 
     rb_define_module_function (mOSA, "__four_char_code__", rbosa_four_char_code, 1);
 
     cOSAElement = rb_define_class_under (mOSA, "Element", rb_cObject);

@@ -18,20 +18,20 @@ end
 
 usage unless ARGV.length == 2 
 
-msg = case ARGV.first
+key = case ARGV.first
     when '--name'
-        :app_with_name
+        :by_name
     when '--path'
-        :app_with_path
+        :by_path
     when '--bundle_id'
-        :app_with_bundle_id
+        :by_bundle_id
     when '--signature'
-        :app_with_signature
+        :by_signature
     else
         usage
 end
 
-app = OSA.send(msg, ARGV.last)
+app = OSA.app(key => ARGV.last)
 doc = REXML::Document.new(app.sdef)
 doc.write(STDOUT, 0)
 puts ""

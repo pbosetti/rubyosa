@@ -29,6 +29,7 @@
 #include <ApplicationServices/ApplicationServices.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <unistd.h>
+#include <st.h>
 #include "rbosa.h"
 
 static void 
@@ -122,16 +123,52 @@ rbosa_translate_app (VALUE criterion, VALUE value, VALUE *app_signature, VALUE *
     return TRUE;
 }
 
+static inline VALUE
+__get_criterion (VALUE hash, const char *str, VALUE *psym)
+{
+    VALUE   sym;
+    VALUE   val;
+
+    sym = ID2SYM (rb_intern (str));
+    val = rb_hash_delete (hash, sym);
+
+    if (!NIL_P (val))
+        *psym = sym;
+
+    return val;     
+}
+
 VALUE
-rbosa_scripting_info (VALUE self, VALUE criterion, VALUE value)
+rbosa_scripting_info (VALUE self, VALUE hash)
 {
     const char *    error;
+    VALUE           criterion;
+    VALUE           value;
     VALUE           ary;
     VALUE           name;  
     VALUE           signature;
     FSRef           fs;
     OSAError        osa_error;
     CFDataRef       sdef_data;
+
+    Check_Type (hash, T_HASH);
+
+    value = __get_criterion (hash, "by_name", &criterion);
+    if (NIL_P (value))
+        value = __get_criterion (hash, "by_path", &criterion);
+    if (NIL_P (value))
+        value = __get_criterion (hash, "by_bundle_id", &criterion);
+    if (NIL_P (value))
+        value = __get_criterion (hash, "by_signature", &criterion);
+    if (NIL_P (value))
+        rb_raise (rb_eArgError, "expected :by_name, :by_path, :by_bundle_id or :by_signature key/value");
+
+    if (RHASH (hash)->tbl->num_entries > 0) {
+        VALUE   keys;
+
+        keys = rb_funcall (hash, rb_intern ("keys"), 0);
+        rb_raise (rb_eArgError, "inappropriate argument(s): %s", RSTRING (rb_inspect (keys))->ptr);
+    }
 
     if (!rbosa_translate_app (criterion, value, &signature, &name, &fs, &error))
         rb_raise (rb_eRuntimeError, error);

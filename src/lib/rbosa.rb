@@ -199,25 +199,41 @@ class OSA::ObjectSpecifierList
     end
 end
 
+module OSA::EventDispatcher
+    def merge(args)
+        args = { :by_name => args } if args.is_a?(String)
+        name, signature, sdef = OSA.__scripting_info__(args)
+        app_module_name = self.class.name.scan(/^OSA::(.+)::.+$/).flatten.first
+        app_module = OSA.const_get(app_module_name) 
+        OSA.__load_sdef__(sdef, signature, app_module, true, self.class)
+        return self 
+    end
+end
+
 module OSA
     def self.app_with_name(name)
-        self.__app__(*OSA.__scripting_info__(:by_name, name))
+        STDERR.puts "OSA.app_with_name() has been deprecated and its usage is now discouraged. Please use OSA.app('name') instead."
+        self.__app__(*OSA.__scripting_info__(:by_name => name))
     end
 
     def self.app_with_path(path)
-        self.__app__(*OSA.__scripting_info__(:by_path, path))
+        STDERR.puts "OSA.app_by_path() has been deprecated and its usage is now discouraged. Please use OSA.app(:by_path => 'path') instead."
+        self.__app__(*OSA.__scripting_info__(:by_path => path))
     end
 
-    def self.app_with_bundle_id(bundle_id)
-        self.__app__(*OSA.__scripting_info__(:by_bundle_id, bundle_id))
+    def self.app_by_bundle_id(bundle_id)
+        STDERR.puts "OSA.app_by_bundle_id() has been deprecated and its usage is now discouraged. Please use OSA.app(:by_bundle_id => 'bundle_id') instead."
+        self.__app__(*OSA.__scripting_info__(:by_bundle_id => bundle_id))
     end
 
-    def self.app_with_signature(signature)
-        self.__app__(*OSA.__scripting_info__(:by_signature, signature))
+    def self.app_by_signature(signature)
+        STDERR.puts "OSA.app_by_signature() has been deprecated and its usage is now discouraged. Please use OSA.app(:by_signature => 'signature') instead."
+        self.__app__(*OSA.__scripting_info__(:by_signature => signature))
     end
 
-    def self.app(name)
-        self.app_with_name(name)
+    def self.app(args)
+        args = { :by_name => args } if args.is_a?(String)
+        self.__app__(*OSA.__scripting_info__(args))
     end
 
     @conversions_to_ruby = {}
@@ -338,6 +354,16 @@ module OSA
         @apps ||= {}
         app = @apps[signature]
         return app if app
+
+        # Creates a module for this app, we will define the scripting interface within it.
+        app_module = Module.new
+        self.const_set(rubyfy_constant_string(name), app_module)
+
+        __load_sdef__(sdef, signature, app_module)
+    end
+
+    def self.__load_sdef__(sdef, signature, app_module, merge_only=false, app_class=nil)
+        # Load the sdef.
         doc = if USE_LIBXML
             parser = XML::Parser.new
             parser.string = sdef
@@ -345,10 +371,6 @@ module OSA
         else
             REXML::Document.new(sdef)
         end
-
-        # Creates a module for this app, we will define the scripting interface within it.
-        app_module = Module.new
-        self.const_set(rubyfy_constant_string(name), app_module)
 
         # Retrieves and creates enumerations.
         enum_group_codes = {} 
@@ -510,21 +532,33 @@ module OSA
             end
         end
 
-        # Having an 'application' class is required.
-        app_class = classes['application']
-        raise "No application class defined." if app_class.nil?
+        unless merge_only
+            # Having an 'application' class is required.
+            app_class = classes['application']
+            raise "No application class defined." if app_class.nil?
+            all_classes_but_app = classes.values.reject { |x| x.ancestors.include?(OSA::EventDispatcher) }
+        else
+            all_classes_but_app = classes.values
+        end
 
         # Maps commands to the right classes.
-        all_classes_but_app = classes.values.reject { |x| x.ancestors.include?(OSA::EventDispatcher) }
         doc.find('/dictionary/suite/command').each do |element|
             name = element['name']
             next if /NOT AVAILABLE/.match(name) # Finder's sdef (Tiger) names some commands with this 'tag'.
             description = element['description']
-            code = element['code']
             direct_parameter = element.find_first('direct-parameter')
             result = element.find_first('result')           
             has_result = result != nil
  
+            code = element['code']
+            begin
+                code = Iconv.iconv('MACROMAN', 'UTF-8', code).to_s
+            rescue Iconv::IllegalSequence
+                # We can't do more...
+                STDERR.puts "unrecognized command code encoding '#{code}', skipping..." if $DEBUG
+                next
+            end
+
             classes_to_define = []
             forget_direct_parameter = true
             direct_parameter_optional = false
@@ -586,8 +620,6 @@ module OSA
                 ]
                 params_doc << DocItem.new(rubyfy_string(element['name'], true), englishify_sentence(element['description'])) 
             end
- 
-            code = Iconv.iconv('MACROMAN', 'UTF-8', code).to_s
 
             method_proc = proc do |*args_ary|
                 args = []
@@ -649,15 +681,17 @@ module OSA
             end
         end
 
-        # Returns an application instance, that's all folks!
-        hash = {}
-        classes.each_value { |klass| hash[klass::CODE] = klass } 
-        app_class.class_eval { attr_reader :sdef }
-        app = app_class.__new__('sign', signature.to_4cc)
-        app.instance_variable_set(:@sdef, sdef)
-        app.instance_variable_set(:@classes, hash)
-        app.extend OSA::EventDispatcher
-        @apps[signature] = app
+        unless merge_only
+            # Returns an application instance, that's all folks!
+            hash = {}
+            classes.each_value { |klass| hash[klass::CODE] = klass } 
+            app_class.class_eval { attr_reader :sdef }
+            app = app_class.__new__('sign', signature.to_4cc)
+            app.instance_variable_set(:@sdef, sdef)
+            app.instance_variable_set(:@classes, hash)
+            app.extend OSA::EventDispatcher
+            @apps[signature] = app
+        end
     end
 
     def self.parameter_optional?(element)
@@ -726,11 +760,15 @@ module OSA
         type = element['type']
         if type.nil?
             etype = element.find_first('type')
-            if etype.nil? or (type = etype['type']).nil?
-                raise "Parameter #{element} has no type."
+            if etype
+                type = etype['type']
+                if type.nil? and (etype2 = etype.find_first('type')) != nil
+                    type = etype2['type']
+                end
+                type = "list_of_#{type}" if etype['list'] == 'yes'
             end
-            type = "list_of_#{type}" if etype['list'] == 'yes'
         end
+        raise "Parameter #{element} has no type." if type.nil?
         return type
     end
 

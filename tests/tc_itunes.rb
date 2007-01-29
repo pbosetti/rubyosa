@@ -32,7 +32,7 @@ require 'as'
 
 class TC_iTunes < Test::Unit::TestCase
   def setup
-    @itunes = OSA.app_with_name('iTunes')
+    @itunes = OSA.app('iTunes')
   end
 
   def do_as(str)

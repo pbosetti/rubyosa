@@ -34,7 +34,7 @@
 #include <sys/param.h>
 
 /* rbosa_sdef.c */
-VALUE rbosa_scripting_info (VALUE self, VALUE criterion, VALUE value);
+VALUE rbosa_scripting_info (VALUE self, VALUE hash);
 
 /* rbosa_conv.c */
 FourCharCode rbobj_to_fourchar (VALUE obj);

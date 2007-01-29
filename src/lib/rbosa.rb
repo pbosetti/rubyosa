@@ -472,7 +472,7 @@ module OSA
                         return nil
                     end
                     klass.class_eval { define_method(method_name, method_proc) }
-                    methods_doc << DocMethod.new(method_name, englishify_sentence("Sets the #{name} property -- #{description}"), nil, [DocItem.new('val', englishify_sentence("the value to be set, as #{ptypedoc}"))])
+                    methods_doc << DocMethod.new(method_name, englishify_sentence("Sets the #{name} property #{description}"), nil, [DocItem.new('val', englishify_sentence("the value to be set, as #{ptypedoc}"))])
                 end 
             end
 

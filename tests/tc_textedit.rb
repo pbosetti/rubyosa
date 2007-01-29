@@ -32,6 +32,7 @@ require 'fileutils'
 class TC_TextEdit < Test::Unit::TestCase
   def setup
     @textedit = OSA.app_with_name('TextEdit')
+    @textedit.documents.each { |x| x.close }
   end
 
   def do_as(str)

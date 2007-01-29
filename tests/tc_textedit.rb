@@ -27,6 +27,7 @@
 require 'test/unit'
 require 'rbosa'
 require 'as'
+require 'fileutils'
 
 class TC_TextEdit < Test::Unit::TestCase
   def setup
@@ -56,6 +57,17 @@ class TC_TextEdit < Test::Unit::TestCase
   end
 
   def test_new_doc_set_text2
+    doc = @textedit.make(OSA::TextEdit::Document, :with_properties => {:ctxt => 'foo'})
+    begin
+      assert_kind_of(OSA::TextEdit::Document, doc)
+      assert_equal('foo', doc.text.get)
+      assert_equal('foo', do_as('get text of document 1'))
+    ensure
+      doc.close
+    end
+  end
+
+  def test_new_doc_set_text3
     doc = @textedit.make(OSA::TextEdit::Document)
     begin
       assert_kind_of(OSA::TextEdit::Document, doc)
@@ -64,6 +76,38 @@ class TC_TextEdit < Test::Unit::TestCase
       assert_equal('foo', do_as('get text of document 1'))
     ensure
       doc.close
+    end
+  end
+
+  def test_doc_save_open1
+    doc = @textedit.make(OSA::TextEdit::Document)
+    begin
+      doc.text = 'foo bar'
+      FileUtils.rm_rf('/tmp/foo.rtf')
+      doc.save('RTF', '/tmp/foo.rtf')
+      @textedit.documents.each { |d| d.close }
+      assert_equal(0, @textedit.documents.size)
+      @textedit.open('/tmp/foo.rtf')
+      doc = @textedit.documents[0]
+      assert_equal('foo bar', doc.text.get)
+    ensure
+      @textedit.documents.each { |d| d.close }
+    end
+  end
+  
+  def test_doc_save_open2
+    doc = @textedit.make(OSA::TextEdit::Document)
+    begin
+      doc.text = 'foo bar'
+      FileUtils.rm_rf('/tmp/foo.rtf')
+      doc.save(:as => 'RTF', :in => '/tmp/foo.rtf')
+      @textedit.documents.each { |d| d.close }
+      assert_equal(0, @textedit.documents.size)
+      @textedit.open('/tmp/foo.rtf')
+      doc = @textedit.documents[0]
+      assert_equal('foo bar', doc.text.get)
+    ensure
+      @textedit.documents.each { |d| d.close }
     end
   end
 

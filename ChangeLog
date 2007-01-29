@@ -1,6 +1,12 @@
 2007-01-29  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* tests/tc_textedit.rb,
+	  src/lib/rbosa.rb,
+	  TODO:
+	Added the possibility to specify optional arguments using an inline-Hash
+	syntax (the old way is also still possible).
+
+	* tests/tc_textedit.rb,
 	  tests/as.rb,
 	  tests/tc_get_app.rb,
 	  src/lib/rbosa.rb,

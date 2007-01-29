@@ -2,10 +2,10 @@ For the next public release:
 [X] Get rid of module_eval calls by using Module#define_method to create 
     methods.
 [X] Investigate 'location reference'.
+[X] Use hash-like syntax for optional parameters.
 [X] Write more tests.
 
 Further releases:
 [ ] Check type consistency of given method args.
-[ ] Use hash-like syntax for optional parameters.
 [ ] Add a possibility to merge sdef additions to an application object.
 [ ] Add flatten/unflatten methods on OSA::Element.

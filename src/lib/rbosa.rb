@@ -568,7 +568,7 @@ module OSA
             unless direct_parameter.nil?
                 pdesc = direct_parameter['description']
                 params << [
-                    'direct', 
+                    'direct',
                     '----',
                     direct_parameter_optional,
                     type_of_parameter(direct_parameter)
@@ -579,15 +579,13 @@ module OSA
             end 
 
             element.find('parameter').to_a.each do |element|
-                pname = rubyfy_string(element['name'], true)
-                pdesc = element['description']
                 params << [
-                    pname,
+                    rubyfy_string(element['name']),
                     element['code'],
                     parameter_optional?(element),
                     type_of_parameter(element)
                 ]
-                params_doc << DocItem.new(pname, englishify_sentence(pdesc)) 
+                params_doc << DocItem.new(rubyfy_string(element['name'], true), englishify_sentence(element['description'])) 
             end
  
             code = Iconv.iconv('MACROMAN', 'UTF-8', code).to_s
@@ -596,12 +594,12 @@ module OSA
                 args = []
                 min_argc = i = 0
                 already_has_optional_args = false # Once an argument is optional, all following arguments should be optional.
+                optional_hash = nil 
                 params.each do |pname, pcode, optional, ptype|
                     self_direct = (pcode == '----' and forget_direct_parameter)
                     if already_has_optional_args or (optional and !self_direct)
                         already_has_optional_args = true
                     else
-                        min_argc += 1
                         if args_ary.size < i
                             raise ArgumentError, "wrong number of arguments (#{args_ary.size} for #{i})"
                         end
@@ -610,7 +608,14 @@ module OSA
                         self.is_a?(OSA::EventDispatcher) ? [] : ['----', self]
                     else
                         arg = args_ary[i]
+                        min_argc += 1 unless already_has_optional_args
                         i += 1
+                        if arg.is_a?(Hash) and already_has_optional_args and i >= args_ary.size and min_argc + 1 == i
+                            optional_hash = arg
+                        end
+                        if optional_hash
+                            arg = optional_hash.delete(pname.intern)
+                        end 
                         if arg.nil? and already_has_optional_args
                             []
                         else
@@ -621,6 +626,9 @@ module OSA
                 end
                 if args_ary.size > params.size
                     raise ArgumentError, "wrong number of arguments (#{args_ary.size} for #{min_argc})"
+                end
+                if optional_hash and !optional_hash.empty?
+                    raise ArgumentError, "inappropriate optional argument(s): #{optional_hash.keys.join(', ')}"
                 end
                 ret = @app.__send_event__(code[0..3], code[4..-1], args, has_result)
                 has_result ? ret.to_rbobj : ret

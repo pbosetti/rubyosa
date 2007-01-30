@@ -1,5 +1,10 @@
 2007-01-30  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* src/lib/rbosa.rb:
+	When trying to merge an sdef in the current application, if the LaunchServices
+	couldn't locate it by its name, let's be clever and look inside the 
+	ScriptingAdditions locations.
+
 	* src/lib/rbosa.rb,
 	  src/rbosa.c,
 	  src/rbosa_sdef.c,

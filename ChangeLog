@@ -1,5 +1,14 @@
 2007-01-31  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* extconf.rb,
+	  bin/rdoc-osa,
+	  data/rubyosa/rdoc_html.rb,
+	  post-install.rb:
+	- Better RDoc generation (removed the Files frame, references to the generated
+	  dummy Ruby file and source code, changed the default HTML title) ;
+	- Make sure the rdoc-osa tool and the new template are properly installed in 
+	  the right locations by 'make install'.
+
 	* src/rbosa.c:
 	Make sure we send events with the user-can-interact flag set on.
 

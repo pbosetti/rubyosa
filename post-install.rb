@@ -24,37 +24,16 @@
 # IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-require 'mkmf'
+require 'fileutils'
+require 'rbconfig'
+include FileUtils
 
-$CFLAGS << ' -Wall '
-$LDFLAGS = '-framework Carbon -framework ApplicationServices'
-
-exit 1 unless have_func('OSACopyScriptingDefinition')
-exit 1 unless have_func('LSFindApplicationForInfo')
-
-# Avoid `ID' and `T_DATA' symbol collisions between Ruby and Carbon.
-# (adapted code from RubyAEOSA - FUJIMOTO Hisakuni  <hisa@fobj.com>)
-ruby_h = "#{Config::CONFIG['archdir']}/ruby.h"
-intern_h = "#{Config::CONFIG['archdir']}/intern.h"
-new_filename_prefix = 'osx_'
-[ ruby_h, intern_h ].each do |src_path|
-    dst_fname = File.join('./src', new_filename_prefix + File.basename(src_path))
-    $stderr.puts "create #{File.expand_path(dst_fname)} ..."
-    File.open(dst_fname, 'w') do |dstfile|
-        IO.foreach(src_path) do |line|
-            line = line.gsub(/\bID\b/, 'RB_ID')
-            line = line.gsub(/\bT_DATA\b/, 'RB_T_DATA')
-            line = line.gsub(/\bintern.h\b/, "#{new_filename_prefix}intern.h")
-            dstfile.puts line
-        end
-    end
+def install(file, dest)
+  mkdir_p(dest)
+  path = File.join(dest, File.basename(file))
+  cp(file, path)
+  chmod(0755, path)
 end
 
-# Generate the Makefile
-create_makefile('osa', 'src')
-
-# Tweak the Makefile to call post-install.rb after the install target.
-text = File.read('Makefile')
-text.sub!(/install: install-so install-rb/, 'install: install-so install-rb post-install')
-text << "\n\npost-install: post-install.rb\n\t@$(RUBY) post-install.rb\n\n"
-File.open('Makefile', 'w') { |io| io.write(text) }
+install('bin/rdoc-osa', Config::CONFIG['bindir'])
+install('data/rubyosa/rdoc_html.rb', File.join(Config::CONFIG['datadir'], 'rubyosa'))

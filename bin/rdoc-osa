@@ -1,8 +1,8 @@
 #!/usr/bin/env ruby
-# RDoc frontend for RubyOSA. Generate API referene documentation for the 
+# RDoc frontend for RubyOSA. Generate API reference documentation for the
 # given application, based on the descriptions in the sdef(5).
 #
-# Copyright (c) 2006-2007, Apple Computer, Inc. All rights reserved.
+# Copyright (c) 2006-2007, Apple Inc. All rights reserved.
 # 
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -12,7 +12,7 @@
 # 2.  Redistributions in binary form must reproduce the above copyright
 #     notice, this list of conditions and the following disclaimer in the
 #     documentation and/or other materials provided with the distribution. 
-# 3.  Neither the name of Apple Computer, Inc. ("Apple") nor the names of
+# 3.  Neither the name of Apple Inc. ("Apple") nor the names of
 #     its contributors may be used to endorse or promote products derived
 #     from this software without specific prior written permission. 
 # 
@@ -30,6 +30,7 @@
 
 require 'rbosa'
 require 'tmpdir'
+require 'rbconfig'
 
 def usage
     STDERR.puts <<-EOS
@@ -140,9 +141,17 @@ module OSA; end
 module #{mod.name}; end
 EOS
 
+rdoc_flags = ''
+template = File.join(Config.datadir('rubyosa'), 'rdoc_html.rb')
+if File.exists?(template)
+    rdoc_flags << " --template '#{template}' "
+end
+rdoc_flags << " --title '#{app.name} RubyOSA API' "
+rdoc_flags << ARGV[2..-1].join(' ')
+
 path = unique_tmp_path(app.name, '.rb')
 File.open(path, 'w') { |io| io.puts fake_ruby_src }
-line = "rdoc #{ARGV[2..-1].join(' ')} \"#{path}\""
+line = "rdoc #{rdoc_flags} \"#{path}\""
 unless system(line)
     STDERR.puts "Error when executing `#{line}' : #{$?}"
     exit 1

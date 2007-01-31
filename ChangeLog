@@ -1,3 +1,8 @@
+2007-01-31  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* src/rbosa.c:
+	Make sure we send events with the user-can-interact flag set on.
+
 2007-01-30  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/lib/rbosa.rb:

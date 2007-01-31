@@ -294,7 +294,7 @@ rbosa_app_send_event (VALUE self, VALUE event_class, VALUE event_id, VALUE param
     rb_timeout = rb_iv_get (mOSA, "@timeout");
     timeout = NIL_P (rb_timeout) ? kAEDefaultTimeout : NUM2INT (rb_timeout);
    
-    error = AESend (&ae, &reply, (RVAL2CBOOL(need_retval) ? kAEWaitReply : kAENoReply) | kAENeverInteract | kAECanSwitchLayer,
+    error = AESend (&ae, &reply, (RVAL2CBOOL(need_retval) ? kAEWaitReply : kAENoReply) | kAECanInteract | kAECanSwitchLayer,
                     kAENormalPriority, timeout, NULL, NULL);
 
     AEDisposeDesc (&ae); 

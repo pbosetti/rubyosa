@@ -1,5 +1,9 @@
 2007-01-31  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* src/lib/rbosa.rb,
+	  src/rbosa_sdef.c:
+	Better error messages for OSA.app and #merge.
+
 	* extconf.rb,
 	  bin/rdoc-osa,
 	  data/rubyosa/rdoc_html.rb,

@@ -214,21 +214,21 @@ module OSA::EventDispatcher
         by_name = args[:by_name]
         begin
             name, signature, sdef = OSA.__scripting_info__(args)
-        rescue RuntimeError => e
+        rescue RuntimeError => excp
             # If an sdef bundle can't be find by name, let's be clever and look in the ScriptingAdditions locations.
             if by_name 
                 args = SCRIPTING_ADDITIONS_DIR.each do |dir|
                     path = ['.app', '.osax'].map { |e| File.join(dir, by_name + e) }.find { |p| File.exists?(p) }
                     if path
-                        break args = { :by_path => path }
+                        break { :by_path => path }
                     end
                 end 
-                if args
+                if args.is_a?(Hash)
                     by_name = nil
                     retry
                 end
             end
-            raise e
+            raise excp
         end
         app_module_name = self.class.name.scan(/^OSA::(.+)::.+$/).flatten.first
         app_module = OSA.const_get(app_module_name) 

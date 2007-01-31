@@ -107,7 +107,7 @@ rbosa_translate_app (VALUE criterion, VALUE value, VALUE *app_signature, VALUE *
     }
     
     if (err != noErr) {
-        *error = "Error when translating the application";
+        *error = "Can't locate the target bundle on the file system";
         return FALSE;
     }
 
@@ -116,7 +116,7 @@ rbosa_translate_app (VALUE criterion, VALUE value, VALUE *app_signature, VALUE *
     CFRelease (URL);
 
     if (NIL_P (*app_signature)) {
-        *error = "Error when getting the application signature";
+        *error = "Can't get the target bundle signature";
         return FALSE;
     }
  

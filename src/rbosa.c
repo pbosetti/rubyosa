@@ -38,8 +38,6 @@ static VALUE mOSAEventDispatcher;
 static ID sClasses;
 static ID sApp;
 
-#define INSPECT_AEDESC 0
-
 static void
 rbosa_element_free (void *ptr)
 {
@@ -468,25 +466,22 @@ bails:
     return CBOOL2RVAL (ok);
 }
 
-#if INSPECT_AEDESC
 static VALUE
 rbosa_element_inspect (VALUE self)
 {
     Handle  h;
-    VALUE   s;
     char    buf[1024];
 
-    s = rb_call_super (0, NULL);
-    if (AEPrintDescToHandle (rbosa_element_aedesc (self), &h) != noErr)
-        return s;
+    if (AEPrintDescToHandle (rbosa_element_aedesc (self), &h) != noErr) {
+      snprintf (buf, sizeof buf, "<%s:%p>", rb_obj_classname (self), (void *)self);
+    }
+    else {
+      snprintf (buf, sizeof buf, "<%s:%p desc=\"%s\">", rb_obj_classname (self), (void *)self, *h);
+      DisposeHandle (h);
+    }
     
-    RSTRING(s)->ptr[RSTRING(s)->len - 1] = '\0';
-    snprintf (buf, sizeof buf, "%s aedesc=\"%s\">", RSTRING(s)->ptr, *h);
-    DisposeHandle (h);
-
     return CSTR2RVAL (buf);
 }
-#endif
 
 static long
 __rbosa_elementlist_count (AEDescList *list)
@@ -667,9 +662,7 @@ Init_osa (void)
     rb_define_method (cOSAElement, "before", rbosa_element_before, 0);
     rb_define_method (cOSAElement, "after", rbosa_element_after, 0);
     rb_define_method (cOSAElement, "==", rbosa_element_eql, 1);
-#if INSPECT_AEDESC
     rb_define_method (cOSAElement, "inspect", rbosa_element_inspect, 0);
-#endif
 
     cOSAElementList = rb_define_class_under (mOSA, "ElementList", cOSAElement);
     rb_define_singleton_method (cOSAElementList, "__new__", rbosa_elementlist_new, -1);

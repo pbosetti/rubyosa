@@ -189,6 +189,10 @@ class OSA::ObjectSpecifierList
         and (0..other.length).all? { |i| other[i] == self[i] }
     end
 
+    def inspect
+        super.scan(/^([^ ]+)/).to_s << " desired_class=#{@desired_class}>"
+    end
+
     #######
     private
     #######

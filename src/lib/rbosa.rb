@@ -910,7 +910,7 @@ end
 OSA.add_conversion_to_ruby('enum') { |value, type, object| OSA::Enumerator.enum_for_code(object.__data__('TEXT')) or object }
 
 # Class.
-OSA.add_conversion_to_osa('type class') { |value| value.is_a?(Class) and value.ancestors.include?(OSA::Element) ? ['type', value::CODE.to_4cc] : value } 
+OSA.add_conversion_to_osa('type class', 'type') { |value| value.is_a?(Class) and value.ancestors.include?(OSA::Element) ? ['type', value::CODE.to_4cc] : value } 
 OSA.add_conversion_to_ruby('type') do |value, type, object| 
   if value == 'msng' 
     # Missing values.

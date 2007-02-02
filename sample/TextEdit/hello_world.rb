@@ -6,7 +6,7 @@ require 'rbosa'
 textedit = OSA.app('TextEdit')
 
 # Complex way.
-textedit.make(OSA::TextEdit::Document, nil, nil, {:text => 'Hello World #1'})
+textedit.make(OSA::TextEdit::Document, :with_properties => {:text => 'Hello World #1'})
 
 # Easier way.
 textedit.make(OSA::TextEdit::Document).text = 'Hello World #2'

@@ -1,5 +1,8 @@
 2007-02-02  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* rubyosa.gemspec:
+	Synchronized (using 0.2.1 for the version though).
+
 	* src/lib/rbosa.rb:
 	Same conversion behavior for 'type' than 'type class'. 
 

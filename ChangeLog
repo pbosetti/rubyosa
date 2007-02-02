@@ -1,5 +1,11 @@
 2007-02-02  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* tests/tc_textedit.rb,
+	  src/lib/rbosa_properties.rb,
+	  src/lib/rbosa.rb:
+	Auto-convert codes to symbols when converting Ruby Hash objects into OSA
+	records. Register the application properties. Added a test case.
+
 	* rubyosa.gemspec:
 	Synchronized (using 0.2.1 for the version though).
 

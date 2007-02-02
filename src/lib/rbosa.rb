@@ -129,6 +129,19 @@ class OSA::ElementList
 end
 
 class OSA::ElementRecord
+    def self.from_hash(hash)
+        value = {}
+        hash.each do |code, val| 
+            key = OSA.sym_to_code(code)
+            if key.nil?
+                raise ArgumentError, "invalid key `#{code}'" if code.to_s.length != 4
+                key = code
+            end
+            value[key] = OSA::Element.from_rbobj(nil, val, nil)
+        end
+        OSA::ElementRecord.__new__(value)
+    end
+
     def to_hash
         h = {}
         self.to_a.each do |code, val|
@@ -527,6 +540,8 @@ module OSA
                     klass.class_eval { define_method(method_name, method_proc) }
                     methods_doc << DocMethod.new(method_name, englishify_sentence("Sets the #{name} property #{description}"), nil, [DocItem.new('val', englishify_sentence("the value to be set, as #{ptypedoc}"))])
                 end 
+
+                OSA.add_property(name.intern, code)
             end
 
             # Creates elements.
@@ -899,8 +914,7 @@ end
 OSA.add_conversion_to_ruby('reco') { |value, type, object| object.is_a?(OSA::ElementRecord) ? object.to_hash : value }
 OSA.add_conversion_to_osa('record') do |value| 
     if value.is_a?(Hash)
-        value.each { |key, val| value[key] = OSA::Element.from_rbobj(nil, val, nil) } 
-        OSA::ElementRecord.__new__(value)
+        OSA::ElementRecord.from_hash(value)
     else
         value 
     end 

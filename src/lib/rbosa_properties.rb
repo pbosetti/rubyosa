@@ -31,6 +31,7 @@ module OSA
   @code_to_sym = {}
 
   def self.add_property(sym, code)
+    return if @sym_to_code.has_key?(sym) or @code_to_sym.has_key?(code)
     @sym_to_code[sym] = code
     @code_to_sym[code] = sym
   end

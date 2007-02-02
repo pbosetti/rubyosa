@@ -68,7 +68,18 @@ class TC_TextEdit < Test::Unit::TestCase
     end
   end
 
-  def test_new_doc_set_text3
+  def test_new_doc_set_text2
+    doc = @textedit.make(OSA::TextEdit::Document, :with_properties => {:text => 'foo'})
+    begin
+      assert_kind_of(OSA::TextEdit::Document, doc)
+      assert_equal('foo', doc.text.get)
+      assert_equal('foo', do_as('get text of document 1'))
+    ensure
+      doc.close
+    end
+  end
+
+  def test_new_doc_set_text4
     doc = @textedit.make(OSA::TextEdit::Document)
     begin
       assert_kind_of(OSA::TextEdit::Document, doc)

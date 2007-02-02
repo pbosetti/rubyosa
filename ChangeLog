@@ -2,9 +2,11 @@
 
 	* tests/tc_textedit.rb,
 	  src/lib/rbosa_properties.rb,
-	  src/lib/rbosa.rb:
+	  src/lib/rbosa.rb,
+	  sample/TextEdit/hello_world.rb:
 	Auto-convert codes to symbols when converting Ruby Hash objects into OSA
-	records. Register the application properties. Added a test case.
+	records. Register the application properties. Added a test case. Updated 
+	sample code.
 
 	* rubyosa.gemspec:
 	Synchronized (using 0.2.1 for the version though).

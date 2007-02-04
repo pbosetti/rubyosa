@@ -376,9 +376,13 @@ module OSA
 
     class DocItem
         attr_reader :name, :description
-        def initialize(name, description)
+        def initialize(name, description, optional=false)
             @name = name
             @description = description
+            @optional = optional
+        end
+        def optional?
+            @optional
         end
     end
 
@@ -658,13 +662,14 @@ module OSA
             end 
 
             element.find('parameter').to_a.each do |element|
+                poptional = parameter_optional?(element) 
                 params << [
                     rubyfy_string(element['name']),
                     element['code'],
-                    parameter_optional?(element),
+                    poptional,
                     type_of_parameter(element)
                 ]
-                params_doc << DocItem.new(rubyfy_string(element['name'], true), englishify_sentence(element['description'])) 
+                params_doc << DocItem.new(rubyfy_string(element['name'], true), englishify_sentence(element['description']), poptional) 
             end
 
             method_proc = proc do |*args_ary|

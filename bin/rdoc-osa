@@ -79,16 +79,25 @@ fake_ruby_src = mod.constants.map do |const_name|
     when Class
         # Class.
         methods_desc = obj.const_get('METHODS_DESCRIPTION').map do |method|
-            args_doc, args_def = '', ''
+            args_doc, args_def, args_def_opt = '', '', ''
             if method.args and !method.args.empty?
-                args_doc = method.args.map do |x| 
-                    arg = x.name.dup
-                    optional = arg.sub!(/=.+$/, '') != nil
+                args_doc_ary, args_def_ary, args_def_opt_ary = [], [], []
+                method.args.each do |x| 
+                    arg = x.name
                     desc = x.description
                     desc = DOC_NOT_AVAILABLE if desc.empty?
-                    "  # #{arg}::\n  #    #{desc}" + (optional ? ' Optional.' : '')
-                end.join("\n")
-                args_def = '(' + method.args.map { |x| x.name }.join(', ') + ')'
+                    args_doc_ary << "  # #{arg}::\n  #    #{desc}" + (x.optional? ? ' Optional. Can be passed as a Hash key/value.' : '')
+                    if x.optional?
+                        args_def_ary << x.name + '=nil'
+                        args_def_opt_ary << ':' + x.name + ' => nil'
+                    else
+                        args_def_ary << x.name
+                        args_def_opt_ary << x.name
+                    end
+                end
+                args_doc = args_doc_ary.join("\n")
+                args_def = '(' + args_def_ary.join(', ') + ')'
+                args_def_opt = '(' + args_def_opt_ary.join(', ') + ')'
             end
             if method.result
                 args_doc << "\n" unless args_doc.empty?
@@ -97,6 +106,10 @@ fake_ruby_src = mod.constants.map do |const_name|
                 args_doc << "  # Returns::\n  #    #{desc}\n"
             end
             <<EOS
+  # call-seq:
+  #    #{method.name + args_def}
+  #    #{args_def_opt != args_def ? method.name + args_def_opt : ''}
+  #
   # #{method.description}
 #{args_doc}
   def #{method.name}#{args_def}; end
@@ -147,6 +160,7 @@ if File.exists?(template)
     rdoc_flags << " --template '#{template}' "
 end
 rdoc_flags << " --title '#{app.name} RubyOSA API' "
+rdoc_flags << ' --main OSA '
 rdoc_flags << ARGV[2..-1].join(' ')
 
 path = unique_tmp_path(app.name, '.rb')

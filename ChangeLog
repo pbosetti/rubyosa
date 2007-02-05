@@ -1,5 +1,20 @@
 2007-02-05  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* src/lib/rbosa.rb,
+	  src/rbosa_sdef.c:
+	- API change for OSA.app and #merge: the :by_* prefixes of keywords have been
+	  removed (for example, OSA.app(:path => '...') instead of 
+	  OSA.app(:by_path => '...')) ;
+	- Added the possibility to control remote applications, by passing the 
+	  :machine keyword (:username and :password can also be used but they are not
+	  mandatory). Work is still in progress.
+
+	* bin/rdoc-osa,
+	  sample/misc/sdef.rb,
+	  tests/tc_get_app.rb,
+	  TODO:
+	Follow last change.
+
 	* tests/tc_omnigraffle.rb,
 	  tests/data/test.graffle:
 	Added a test case to verify the last fix.

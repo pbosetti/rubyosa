@@ -20,13 +20,13 @@ usage unless ARGV.length == 2
 
 key = case ARGV.first
     when '--name'
-        :by_name
+        :name
     when '--path'
-        :by_path
+        :path
     when '--bundle_id'
-        :by_bundle_id
+        :bundle_id
     when '--signature'
-        :by_signature
+        :signature
     else
         usage
 end

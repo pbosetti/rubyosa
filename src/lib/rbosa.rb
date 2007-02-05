@@ -232,17 +232,17 @@ module OSA::EventDispatcher
     end
 
     def merge(args)
-        args = { :by_name => args } if args.is_a?(String)
-        by_name = args[:by_name]
+        args = { :name => args } if args.is_a?(String)
+        by_name = args[:name]
         begin
-            name, signature, sdef = OSA.__scripting_info__(args)
+            name, target, sdef = OSA.__scripting_info__(args)
         rescue RuntimeError => excp
             # If an sdef bundle can't be find by name, let's be clever and look in the ScriptingAdditions locations.
             if by_name 
                 args = SCRIPTING_ADDITIONS_DIR.each do |dir|
                     path = ['.app', '.osax'].map { |e| File.join(dir, by_name + e) }.find { |p| File.exists?(p) }
                     if path
-                        break { :by_path => path }
+                        break { :path => path }
                     end
                 end 
                 if args.is_a?(Hash)
@@ -254,7 +254,7 @@ module OSA::EventDispatcher
         end
         app_module_name = self.class.name.scan(/^OSA::(.+)::.+$/).flatten.first
         app_module = OSA.const_get(app_module_name) 
-        OSA.__load_sdef__(sdef, signature, app_module, true, self.class)
+        OSA.__load_sdef__(sdef, target, app_module, true, self.class)
         return self 
     end
 end
@@ -262,26 +262,26 @@ end
 module OSA
     def self.app_with_name(name)
         STDERR.puts "OSA.app_with_name() has been deprecated and its usage is now discouraged. Please use OSA.app('name') instead."
-        self.__app__(*OSA.__scripting_info__(:by_name => name))
+        self.__app__(*OSA.__scripting_info__(:name => name))
     end
 
     def self.app_with_path(path)
-        STDERR.puts "OSA.app_by_path() has been deprecated and its usage is now discouraged. Please use OSA.app(:by_path => 'path') instead."
-        self.__app__(*OSA.__scripting_info__(:by_path => path))
+        STDERR.puts "OSA.app_by_path() has been deprecated and its usage is now discouraged. Please use OSA.app(:path => 'path') instead."
+        self.__app__(*OSA.__scripting_info__(:path => path))
     end
 
     def self.app_by_bundle_id(bundle_id)
-        STDERR.puts "OSA.app_by_bundle_id() has been deprecated and its usage is now discouraged. Please use OSA.app(:by_bundle_id => 'bundle_id') instead."
-        self.__app__(*OSA.__scripting_info__(:by_bundle_id => bundle_id))
+        STDERR.puts "OSA.app_by_bundle_id() has been deprecated and its usage is now discouraged. Please use OSA.app(:bundle_id => 'bundle_id') instead."
+        self.__app__(*OSA.__scripting_info__(:bundle_id => bundle_id))
     end
 
     def self.app_by_signature(signature)
-        STDERR.puts "OSA.app_by_signature() has been deprecated and its usage is now discouraged. Please use OSA.app(:by_signature => 'signature') instead."
-        self.__app__(*OSA.__scripting_info__(:by_signature => signature))
+        STDERR.puts "OSA.app_by_signature() has been deprecated and its usage is now discouraged. Please use OSA.app(:signature => 'signature') instead."
+        self.__app__(*OSA.__scripting_info__(:signature => signature))
     end
 
     def self.app(args)
-        args = { :by_name => args } if args.is_a?(String)
+        args = { :name => args } if args.is_a?(String)
         self.__app__(*OSA.__scripting_info__(args))
     end
 
@@ -403,19 +403,19 @@ module OSA
         end
     end
  
-    def self.__app__(name, signature, sdef)
+    def self.__app__(name, target, sdef)
         @apps ||= {}
-        app = @apps[signature]
+        app = @apps[target]
         return app if app
 
         # Creates a module for this app, we will define the scripting interface within it.
         app_module = Module.new
         self.const_set(rubyfy_constant_string(name), app_module)
 
-        __load_sdef__(sdef, signature, app_module)
+        @apps[target] = __load_sdef__(sdef, target, app_module)
     end
 
-    def self.__load_sdef__(sdef, signature, app_module, merge_only=false, app_class=nil)
+    def self.__load_sdef__(sdef, target, app_module, merge_only=false, app_class=nil)
         # Load the sdef.
         doc = if USE_LIBXML
             parser = XML::Parser.new
@@ -717,7 +717,7 @@ module OSA
                 if optional_hash and !optional_hash.empty?
                     raise ArgumentError, "inappropriate optional argument(s): #{optional_hash.keys.join(', ')}"
                 end
-                ret = @app.__send_event__(code[0..3], code[4..-1], args, has_result)
+                ret = @app.__send_event__(code[0..3], code[4..-1], args, (has_result || @app.remote?))
                 has_result ? ret.to_rbobj : ret
             end
 
@@ -741,12 +741,16 @@ module OSA
             # Returns an application instance, that's all folks!
             hash = {}
             classes.each_value { |klass| hash[klass::CODE] = klass } 
-            app_class.class_eval { attr_reader :sdef }
-            app = app_class.__new__('sign', signature.to_4cc)
+            app_class.class_eval do 
+                attr_reader :sdef
+                define_method(:remote?) { @is_remote == true }
+            end
+            is_remote = target.length > 4
+            app = is_remote ? app_class.__new__('aprl', target) : app_class.__new__('sign', target.to_4cc)
+            app.instance_variable_set(:@is_remote, is_remote)
             app.instance_variable_set(:@sdef, sdef)
             app.instance_variable_set(:@classes, hash)
             app.extend OSA::EventDispatcher
-            @apps[signature] = app
         end
     end
 

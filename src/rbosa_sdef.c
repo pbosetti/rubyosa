@@ -68,7 +68,7 @@ rbosa_translate_app (VALUE criterion, VALUE value, VALUE *app_signature, VALUE *
     *app_signature = Qnil;
     err = noErr;
  
-    if (criterion == ID2SYM (rb_intern ("by_signature"))) {
+    if (criterion == ID2SYM (rb_intern ("signature"))) {
         err = LSFindApplicationForInfo (RVAL2FOURCHAR (value), NULL, NULL, fs_ref, &URL);
         *app_signature = value; /* Don't need to get the app signature, we already have it. */
     }
@@ -78,13 +78,13 @@ rbosa_translate_app (VALUE criterion, VALUE value, VALUE *app_signature, VALUE *
         str = CFStringCreateMutable (kCFAllocatorDefault, 0);
         CFStringAppendCString (str, RVAL2CSTR (value), kCFStringEncodingUTF8);
 
-        if (criterion == ID2SYM (rb_intern ("by_path"))) {
+        if (criterion == ID2SYM (rb_intern ("path"))) {
             err = FSPathMakeRef ((const UInt8 *)RVAL2CSTR (value), fs_ref, NULL);
             if (err == noErr) {
                 URL = CFURLCreateWithFileSystemPath (kCFAllocatorDefault, str, kCFURLPOSIXPathStyle, FALSE);
             }
         }
-        else if (criterion == ID2SYM (rb_intern ("by_name"))) {
+        else if (criterion == ID2SYM (rb_intern ("name"))) {
             CFStringRef dot_app;
             
             dot_app = CFSTR (".app");
@@ -94,7 +94,7 @@ rbosa_translate_app (VALUE criterion, VALUE value, VALUE *app_signature, VALUE *
             err = LSFindApplicationForInfo (kLSUnknownCreator, NULL, str, fs_ref, &URL);
             *app_name = value; /* Don't need to get the app name, we already have it. */
         }
-        else if (criterion == ID2SYM (rb_intern ("by_bundle_id"))) {
+        else if (criterion == ID2SYM (rb_intern ("bundle_id"))) {
             err = LSFindApplicationForInfo (kLSUnknownCreator, str, NULL, fs_ref, &URL);
         }
         else {
@@ -132,8 +132,12 @@ __get_criterion (VALUE hash, const char *str, VALUE *psym)
     sym = ID2SYM (rb_intern (str));
     val = rb_hash_delete (hash, sym);
 
-    if (!NIL_P (val))
-        *psym = sym;
+    if (!NIL_P (val)) {
+        if (TYPE (val) != T_STRING)
+            rb_raise (rb_eArgError, "argument '%s' must have a String value", RVAL2CSTR (sym));
+        if (psym != NULL)
+            *psym = sym;
+    }
 
     return val;     
 }
@@ -144,6 +148,7 @@ rbosa_scripting_info (VALUE self, VALUE hash)
     const char *    error;
     VALUE           criterion;
     VALUE           value;
+    VALUE           remote;
     VALUE           ary;
     VALUE           name;  
     VALUE           signature;
@@ -153,15 +158,43 @@ rbosa_scripting_info (VALUE self, VALUE hash)
 
     Check_Type (hash, T_HASH);
 
-    value = __get_criterion (hash, "by_name", &criterion);
+    criterion = Qnil;
+    value = __get_criterion (hash, "name", &criterion);
     if (NIL_P (value))
-        value = __get_criterion (hash, "by_path", &criterion);
+        value = __get_criterion (hash, "path", &criterion);
     if (NIL_P (value))
-        value = __get_criterion (hash, "by_bundle_id", &criterion);
+        value = __get_criterion (hash, "bundle_id", &criterion);
     if (NIL_P (value))
-        value = __get_criterion (hash, "by_signature", &criterion);
+        value = __get_criterion (hash, "signature", &criterion);
     if (NIL_P (value))
-        rb_raise (rb_eArgError, "expected :by_name, :by_path, :by_bundle_id or :by_signature key/value");
+        rb_raise (rb_eArgError, "expected :name, :path, :bundle_id or :signature key/value");
+
+    remote = __get_criterion (hash, "machine", NULL);
+    if (!NIL_P (remote)) {
+        VALUE username;
+        VALUE password;
+        char buf[128];
+
+        if (NIL_P (value) || criterion != ID2SYM (rb_intern ("name")))
+            rb_raise (rb_eArgError, ":machine argument requires :name");
+
+        username = __get_criterion (hash, "username", NULL);
+        password = __get_criterion (hash, "password", NULL);
+
+        if (NIL_P (username)) {
+            if (!NIL_P (password))
+                rb_raise (rb_eArgError, ":password argument requires :username");
+            snprintf (buf, sizeof buf, "eppc://%s/%s", RVAL2CSTR (remote), RVAL2CSTR (value));
+        }
+        else {
+            if (NIL_P (password))
+                snprintf (buf, sizeof buf, "eppc://%s@%s/%s", RVAL2CSTR (username), RVAL2CSTR (remote), RVAL2CSTR (value));
+            else
+                snprintf (buf, sizeof buf, "eppc://%s:%s@%s/%s", RVAL2CSTR (username), RVAL2CSTR (password), RVAL2CSTR (remote), RVAL2CSTR (value));
+        }
+
+        remote = CSTR2RVAL (buf);
+    } 
 
     if (RHASH (hash)->tbl->num_entries > 0) {
         VALUE   keys;
@@ -170,14 +203,16 @@ rbosa_scripting_info (VALUE self, VALUE hash)
         rb_raise (rb_eArgError, "inappropriate argument(s): %s", RSTRING (rb_inspect (keys))->ptr);
     }
 
+    // FIXME: we currently don't have a way to retrieve the sdef of a remote application.
+ 
     if (!rbosa_translate_app (criterion, value, &signature, &name, &fs, &error))
         rb_raise (rb_eRuntimeError, error);
- 
+
     osa_error = OSACopyScriptingDefinition (&fs, kOSAModeNull, &sdef_data);
     if (osa_error != noErr)
         rb_raise (rb_eRuntimeError, "Cannot get scripting definition : error %d", osa_error);
 
-    ary = rb_ary_new3 (3, name, signature, 
+    ary = rb_ary_new3 (3, name, NIL_P (remote) ? signature : remote, 
                        rb_str_new ((const char *)CFDataGetBytePtr (sdef_data), 
                                    CFDataGetLength (sdef_data)));
 

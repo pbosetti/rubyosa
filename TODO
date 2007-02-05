@@ -5,7 +5,9 @@ For the next public release:
 [X] Investigate 'location reference'.
 [X] Use hash-like syntax for optional parameters.
 [X] Write more tests.
+[X] Control remote applications.
 
 Further releases:
 [ ] Check type consistency of given method args.
+[ ] The public API should be (r)documented and used by rdoc-osa.
 [ ] Add flatten/unflatten methods on OSA::Element.

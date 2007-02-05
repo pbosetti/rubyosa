@@ -1,5 +1,9 @@
 2007-02-05  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* tests/tc_omnigraffle.rb,
+	  tests/data/test.graffle:
+	Added a test case to verify the last fix.
+
 	* src/lib/rbosa.rb,
 	  src/rbosa.c:
 	Smarter #get method, if the resolved object doesn't inherit from the 

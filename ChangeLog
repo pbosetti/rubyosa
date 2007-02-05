@@ -1,3 +1,11 @@
+2007-02-05  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* src/lib/rbosa.rb,
+	  src/rbosa.c:
+	Smarter #get method, if the resolved object doesn't inherit from the 
+	desired class, and if it has a property method with a class key/value,
+	return a new descriptor of the desired class.
+
 2007-02-03  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/lib/rbosa.rb,

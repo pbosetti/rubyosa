@@ -193,6 +193,22 @@ rbosa_element_new_os (VALUE self, VALUE desired_class, VALUE container, VALUE ke
     return rbosa_element_make (self, &obj_specifier, Qnil);
 }
 
+static VALUE
+rbosa_element_dup (VALUE self, VALUE element)
+{
+    AEDesc *  desc;
+    AEDesc    new_desc;
+    OSErr     error;
+
+    desc = rbosa_element_aedesc (element);
+    error = AEDuplicateDesc (desc, &new_desc);
+    if (error != noErr) 
+        rb_raise (rb_eArgError, "Cannot duplicate element : %s (%d)", 
+                  GetMacOSStatusErrorString (error), error);
+
+    return rbosa_element_make (self, &new_desc, Qnil); 
+}
+
 static void
 __rbosa_raise_potential_app_error (AEDesc *reply)
 {
@@ -657,6 +673,7 @@ Init_osa (void)
     cOSAElement = rb_define_class_under (mOSA, "Element", rb_cObject);
     rb_define_singleton_method (cOSAElement, "__new__", rbosa_element_new, 2);
     rb_define_singleton_method (cOSAElement, "__new_object_specifier__", rbosa_element_new_os, 4);
+    rb_define_singleton_method (cOSAElement, "__duplicate__", rbosa_element_dup, 1);
     rb_define_method (cOSAElement, "__type__", rbosa_element_type, 0);
     rb_define_method (cOSAElement, "__data__", rbosa_element_data, -1);
     rb_define_method (cOSAElement, "before", rbosa_element_before, 0);

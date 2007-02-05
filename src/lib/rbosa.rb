@@ -154,7 +154,12 @@ end
 
 module OSA::ObjectSpecifier
     def get
-        @app.__send_event__('core', 'getd', [['----', self]], true).to_rbobj
+        new_obj = @app.__send_event__('core', 'getd', [['----', self]], true).to_rbobj
+        if !new_obj.is_a?(self.class) and new_obj.is_a?(OSA::Element) and self.respond_to?(:properties) and (klass = self.properties[:class])
+            klass.__duplicate__(new_obj)
+        else
+            new_obj
+        end
     end
 end
 

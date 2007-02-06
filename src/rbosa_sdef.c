@@ -220,3 +220,79 @@ rbosa_scripting_info (VALUE self, VALUE hash)
 
     return ary;
 }
+
+VALUE
+rbosa_remote_processes (VALUE self, VALUE machine)
+{
+    char buf[128];
+    CFStringRef str;
+    CFURLRef url;
+    AERemoteProcessResolverRef resolver;
+    CFArrayRef cfary; 
+    CFStreamError cferr;
+    VALUE ary;
+    unsigned i, count;
+
+    snprintf (buf, sizeof buf, "eppc://%s", RVAL2CSTR (machine));
+    str = CFStringCreateWithCString (kCFAllocatorDefault, buf, kCFStringEncodingUTF8);
+    url = CFURLCreateWithString (kCFAllocatorDefault, str, NULL);
+    CFRelease (str);
+    resolver = AECreateRemoteProcessResolver (kCFAllocatorDefault, url);    
+    CFRelease (url);
+
+    cfary = AERemoteProcessResolverGetProcesses (resolver, &cferr); 
+    if (cfary == NULL) {
+        AEDisposeRemoteProcessResolver (resolver);
+        rb_raise (rb_eRuntimeError, "Can't resolve the remote processes on machine '%s' : error %d (domain %d)",
+                  RVAL2CSTR (machine), cferr.error, cferr.domain);
+    }
+
+    ary = rb_ary_new ();
+    for (i = 0, count = CFArrayGetCount (cfary); i < count; i++) {
+        CFDictionaryRef dict;
+        VALUE hash;
+        CFNumberRef number;
+
+        dict = (CFDictionaryRef)CFArrayGetValueAtIndex (cfary, i);
+        hash = rb_hash_new ();
+
+        url = CFDictionaryGetValue (dict, kAERemoteProcessURLKey);
+        if (url == NULL)
+            continue;
+
+        url = CFURLCopyAbsoluteURL (url);
+        str = CFURLGetString (url);
+
+        rb_hash_aset (hash, ID2SYM (rb_intern ("url")), CSTR2RVAL (CFStringGetCStringPtr (str, CFStringGetFastestEncoding (str))));
+
+        CFRelease (url);
+
+        str = CFDictionaryGetValue (dict, kAERemoteProcessNameKey);
+        if (str == NULL)
+            continue;
+        
+        rb_hash_aset (hash, ID2SYM (rb_intern ("name")), CSTR2RVAL (CFStringGetCStringPtr (str, CFStringGetFastestEncoding (str))));
+
+        number = CFDictionaryGetValue (dict, kAERemoteProcessUserIDKey);
+        if (number != NULL) {
+            int uid;
+
+            if (CFNumberGetValue (number, kCFNumberIntType, &uid))
+                rb_hash_aset (hash, ID2SYM (rb_intern ("uid")), INT2FIX (uid));
+        }
+        
+        number = CFDictionaryGetValue (dict, kAERemoteProcessProcessIDKey);
+        if (number != NULL) {
+            int uid;
+
+            if (CFNumberGetValue (number, kCFNumberIntType, &uid))
+                rb_hash_aset (hash, ID2SYM (rb_intern ("pid")), INT2FIX (uid));
+        }
+
+        rb_ary_push (ary, hash);
+    }    
+
+    AEDisposeRemoteProcessResolver (resolver);
+
+    return ary;   
+}

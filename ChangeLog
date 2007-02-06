@@ -1,5 +1,10 @@
 2007-02-05  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* src/rbosa.c,
+	  src/rbosa_sdef.c,
+	  src/rbosa.h:
+	Added an SPI to get the list of processes running on a remote machine.
+
 	* src/lib/rbosa.rb,
 	  src/rbosa_sdef.c:
 	- API change for OSA.app and #merge: the :by_* prefixes of keywords have been

@@ -35,6 +35,7 @@
 
 /* rbosa_sdef.c */
 VALUE rbosa_scripting_info (VALUE self, VALUE hash);
+VALUE rbosa_remote_processes (VALUE self, VALUE machine);
 
 /* rbosa_conv.c */
 FourCharCode rbobj_to_fourchar (VALUE obj);

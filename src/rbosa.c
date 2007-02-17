@@ -270,6 +270,7 @@ rbosa_app_send_event (VALUE self, VALUE event_class, VALUE event_id, VALUE param
     AppleEvent  reply;
     VALUE       rb_timeout;
     SInt32      timeout;
+    VALUE       rb_reply;
 
     error = AECreateAppleEvent (RVAL2FOURCHAR (event_class),
                                 RVAL2FOURCHAR (event_id),
@@ -320,16 +321,19 @@ rbosa_app_send_event (VALUE self, VALUE event_class, VALUE event_id, VALUE param
     __rbosa_raise_potential_app_error (&reply);
 
     if (RTEST (need_retval)) {
-        VALUE   rb_reply;
         AEDesc  replyObject;
 
         AEGetParamDesc (&reply, keyDirectObject, typeWildCard, &replyObject);
 
         rb_reply = rbosa_element_make (cOSAElement, &replyObject, self);
-        
-        return rb_reply; 
     }
-    return Qnil;
+    else {
+        rb_reply = Qnil;
+    }
+
+    AEDisposeDesc (&reply);
+        
+    return rb_reply;
 }
 
 static VALUE

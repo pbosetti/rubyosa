@@ -1,3 +1,14 @@
+2007-02-17  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* src/lib/rbosa.rb,
+	  src/rbosa.c,
+	  src/rbosa_sdef.c:
+	- Now automatically retrieving the remote application sdef ;
+	- Honors the 'id' attribute of the sdef format ;
+	- Be smarter when converting types from Ruby to OSA, making sure primitive
+	  types are always converted ;
+	- Fixed a memory leak.
+
 2007-02-05  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/rbosa.c,

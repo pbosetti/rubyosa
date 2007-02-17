@@ -321,25 +321,8 @@ module OSA
         end
     end
 
-    def self.convert_to_osa(requested_type, value, enum_group_codes=nil)
-        if requested_type.nil?
-            case value
-            when OSA::Element
-                return value
-            when String
-                requested_type = 'text'
-            when Array
-                requested_type = 'list'
-            when Hash
-                requested_type = 'record'
-            when Integer
-                requested_type = 'integer'
-            else
-                STDERR.puts "can't determine OSA type for #{value}" if $VERBOSE
-                ['null', nil]
-            end
-        end
-
+    def self.__convert_to_osa__(requested_type, value, enum_group_codes=nil)
+        return value if value.is_a?(OSA::Element)
         if conversion = @conversions_to_osa[requested_type]
             args = [value, requested_type]
             conversion.call(*args[0..(conversion.arity - 1)])
@@ -355,6 +338,22 @@ module OSA
             STDERR.puts "unrecognized type #{requested_type}" if $VERBOSE
             ['null', nil]
         end
+    end
+
+    def self.convert_to_osa(requested_type, value, enum_group_codes=nil)
+        ary = __convert_to_osa__(requested_type, value, enum_group_codes)
+        if ary == ['null', nil]
+            new_type = case value
+                when String then 'text'
+                when Array then 'list'
+                when Hash then 'record'
+                when Integer then 'integer'
+            end
+            if new_type
+                ary = __convert_to_osa__(new_type, value, enum_group_codes)
+            end
+        end
+        ary
     end
     
     def self.set_params(hash)
@@ -455,7 +454,8 @@ module OSA
         classes = {}
         class_elements = {}
         doc.find('/dictionary/suite/class').each do |element|
-            (class_elements[element['name']] ||= []) << element
+            key = (element['id'] or element['name'])
+            (class_elements[key] ||= []) << element
         end
         class_elements.values.flatten.each do |element| 
             klass = add_class_from_xml_element(element, class_elements, classes, app_module)
@@ -760,7 +760,8 @@ module OSA
 
     def self.add_class_from_xml_element(element, class_elements, repository, app_module)
         real_name = element['name']
-        klass = repository[real_name]
+        key = (element['id'] or real_name)
+        klass = repository[key]
         if klass.nil?
             code = element['code']
             inherits = element['inherits']
@@ -795,7 +796,7 @@ module OSA
             
             app_module.const_set(rubyfy_constant_string(real_name), klass)
 
-            repository[real_name] = klass
+            repository[key] = klass
         end 
 
         return klass

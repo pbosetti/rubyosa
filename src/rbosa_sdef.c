@@ -142,6 +142,136 @@ __get_criterion (VALUE hash, const char *str, VALUE *psym)
     return val;     
 }
 
+static OSStatus 
+send_simple_remote_event (AEEventClass ec, AEEventID ei, const char *target_url, const AEDesc *dp, AppleEvent *reply)
+{
+    OSStatus  err;
+    AEDesc    target, ev, root_reply;
+
+    if ((err = AECreateDesc ('aprl', target_url, strlen(target_url), &target)) != noErr)
+        return err; 
+
+    if ((err = AECreateAppleEvent (ec, ei, &target, kAutoGenerateReturnID, kAnyTransactionID, &ev)) != noErr) {
+        AEDisposeDesc (&target);
+        return err;
+    }
+
+    if (dp != NULL) 
+        AEPutParamDesc (&ev, keyDirectObject, dp);
+
+    err = AESend (&ev, &root_reply, kAEWaitReply, kAENormalPriority, kAEDefaultTimeout, NULL, NULL);
+    if (err == noErr) 
+        err = AEGetParamDesc (&root_reply, keyDirectObject, typeWildCard, reply);
+
+    // XXX we should check for application-level errors
+
+    AEDisposeDesc (&target);
+    AEDisposeDesc (&ev);
+    AEDisposeDesc (&root_reply);
+    
+    return err;
+}
+
+#if MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4
+typedef SInt16 ResFileRefNum;
+#endif
+
+static VALUE
+get_remote_app_sdef (const char *target_url)
+{
+    AEDesc        zero, reply, aete;
+    Size          datasize;
+    void *        data;
+    int           fd;
+    FSRef         fs;
+    CFDataRef     sdef_data;
+    VALUE         sdef;
+    ResFileRefNum res_num;
+    Handle        res;
+    SInt32        z = 0;
+    OSErr         osa_error;
+    HFSUniStr255  resourceForkName; 
+    char          tmp_res_path[] = "/tmp/FakeXXXXXX.osax";
+
+#define BOOM(m) \
+    do { \
+        rb_raise (rb_eRuntimeError, \
+                  "Can't get scripting definition of remote application (%s) : error %d", \
+                  m, osa_error); \
+    } while (0)
+
+    // XXX we should try to get the sdef via ascr/gsdf before trying to convert the AETE!
+
+    AECreateDesc (typeSInt32, &z, sizeof (z), &zero);
+    osa_error = send_simple_remote_event ('ascr', 'gdte', target_url, &zero, &reply);    
+    AEDisposeDesc (&zero);
+    if (osa_error != noErr)
+        BOOM ("sending event");
+
+    osa_error = AECoerceDesc (&reply, kAETerminologyExtension, &aete);
+    AEDisposeDesc (&reply);
+    if (osa_error != noErr)
+        BOOM ("coercing result");
+
+    datasize = AEGetDescDataSize (&aete);
+    data = (void *)malloc (datasize);
+    if (data == NULL)
+        BOOM ("cannot allocate memory");
+
+    osa_error = AEGetDescData (&aete, data, datasize);
+    AEDisposeDesc (&aete);
+    if (osa_error != noErr) {
+        free (data);
+        BOOM ("get data");
+    }
+
+    if (mkstemps (tmp_res_path, 5) == -1) {
+        free (data);
+        BOOM ("generate resource file name");
+    }
+
+    fd = open (tmp_res_path, O_CREAT|O_TRUNC|O_WRONLY, 0644);
+    if (fd == -1) {
+        free (data);
+        BOOM ("creating resource file");
+    }
+    close (fd);
+
+    FSPathMakeRef ((const UInt8 *)tmp_res_path, &fs, NULL);
+    FSGetResourceForkName (&resourceForkName); 
+ 
+    osa_error = FSCreateResourceFork (&fs, resourceForkName.length, resourceForkName.unicode, 0);
+    if (osa_error != noErr) {
+        free (data);
+        BOOM ("creating resource fork");
+    }
+
+    osa_error = FSOpenResourceFile (&fs, resourceForkName.length, resourceForkName.unicode, fsRdWrPerm, &res_num);
+    if (osa_error != noErr) {
+        free (data);
+        BOOM ("opening resource fork");
+    }
+
+    res = NewHandle (datasize);
+    memcpy (*res, data, datasize);
+    AddResource (res, 'aete', 0, (ConstStr255Param)"");
+
+    free (data);
+    CloseResFile (res_num);
+
+    osa_error = OSACopyScriptingDefinition (&fs, kOSAModeNull, &sdef_data);
+    unlink (tmp_res_path);
+    if (osa_error != noErr)
+        rb_raise (rb_eRuntimeError, "Cannot get scripting definition : error %d", osa_error);
+
+    sdef = rb_str_new ((const char *)CFDataGetBytePtr (sdef_data), 
+                       CFDataGetLength (sdef_data));
+
+    CFRelease (sdef_data);
+
+    return sdef;
+}
+
 VALUE
 rbosa_scripting_info (VALUE self, VALUE hash)
 {
@@ -149,16 +279,16 @@ rbosa_scripting_info (VALUE self, VALUE hash)
     VALUE           criterion;
     VALUE           value;
     VALUE           remote;
+    char            c_remote[128];
     VALUE           ary;
     VALUE           name;  
     VALUE           signature;
-    FSRef           fs;
+    VALUE           sdef;
     OSAError        osa_error;
-    CFDataRef       sdef_data;
 
     Check_Type (hash, T_HASH);
 
-    criterion = Qnil;
+    criterion = name = signature = Qnil;
     value = __get_criterion (hash, "name", &criterion);
     if (NIL_P (value))
         value = __get_criterion (hash, "path", &criterion);
@@ -173,50 +303,63 @@ rbosa_scripting_info (VALUE self, VALUE hash)
     if (!NIL_P (remote)) {
         VALUE username;
         VALUE password;
-        char buf[128];
 
         if (NIL_P (value) || criterion != ID2SYM (rb_intern ("name")))
             rb_raise (rb_eArgError, ":machine argument requires :name");
-
+        name = value;
+ 
         username = __get_criterion (hash, "username", NULL);
         password = __get_criterion (hash, "password", NULL);
 
         if (NIL_P (username)) {
             if (!NIL_P (password))
                 rb_raise (rb_eArgError, ":password argument requires :username");
-            snprintf (buf, sizeof buf, "eppc://%s/%s", RVAL2CSTR (remote), RVAL2CSTR (value));
+            snprintf (c_remote, sizeof c_remote, "eppc://%s/%s", 
+                      RVAL2CSTR (remote), RVAL2CSTR (value));
         }
         else {
             if (NIL_P (password))
-                snprintf (buf, sizeof buf, "eppc://%s@%s/%s", RVAL2CSTR (username), RVAL2CSTR (remote), RVAL2CSTR (value));
+                snprintf (c_remote, sizeof c_remote, "eppc://%s@%s/%s", 
+                          RVAL2CSTR (username), RVAL2CSTR (remote), 
+                          RVAL2CSTR (value));
             else
-                snprintf (buf, sizeof buf, "eppc://%s:%s@%s/%s", RVAL2CSTR (username), RVAL2CSTR (password), RVAL2CSTR (remote), RVAL2CSTR (value));
+                snprintf (c_remote, sizeof c_remote, "eppc://%s:%s@%s/%s", 
+                          RVAL2CSTR (username), RVAL2CSTR (password), 
+                          RVAL2CSTR (remote), RVAL2CSTR (value));
         }
 
-        remote = CSTR2RVAL (buf);
+        remote = CSTR2RVAL (c_remote);
     } 
 
     if (RHASH (hash)->tbl->num_entries > 0) {
         VALUE   keys;
 
         keys = rb_funcall (hash, rb_intern ("keys"), 0);
-        rb_raise (rb_eArgError, "inappropriate argument(s): %s", RSTRING (rb_inspect (keys))->ptr);
+        rb_raise (rb_eArgError, "inappropriate argument(s): %s", 
+                  RSTRING (rb_inspect (keys))->ptr);
     }
 
-    // FIXME: we currently don't have a way to retrieve the sdef of a remote application.
- 
-    if (!rbosa_translate_app (criterion, value, &signature, &name, &fs, &error))
-        rb_raise (rb_eRuntimeError, error);
+    if (NIL_P (remote)) {
+        FSRef           fs;
+        CFDataRef       sdef_data;
+        
+        if (!rbosa_translate_app (criterion, value, &signature, &name, &fs, &error))
+            rb_raise (rb_eRuntimeError, error);
 
-    osa_error = OSACopyScriptingDefinition (&fs, kOSAModeNull, &sdef_data);
-    if (osa_error != noErr)
-        rb_raise (rb_eRuntimeError, "Cannot get scripting definition : error %d", osa_error);
+        osa_error = OSACopyScriptingDefinition (&fs, kOSAModeNull, &sdef_data);
+        if (osa_error != noErr)
+            rb_raise (rb_eRuntimeError, "Cannot get scripting definition : error %d", osa_error);
 
-    ary = rb_ary_new3 (3, name, NIL_P (remote) ? signature : remote, 
-                       rb_str_new ((const char *)CFDataGetBytePtr (sdef_data), 
-                                   CFDataGetLength (sdef_data)));
+        sdef = rb_str_new ((const char *)CFDataGetBytePtr (sdef_data), 
+                           CFDataGetLength (sdef_data));
 
-    CFRelease (sdef_data);
+        CFRelease (sdef_data);
+    }
+    else {
+        sdef = get_remote_app_sdef (c_remote);
+    }
+
+    ary = rb_ary_new3 (3, name, NIL_P (remote) ? signature : remote, sdef); 
 
     return ary;
 }
@@ -283,10 +426,10 @@ rbosa_remote_processes (VALUE self, VALUE machine)
         
         number = CFDictionaryGetValue (dict, kAERemoteProcessProcessIDKey);
         if (number != NULL) {
-            int uid;
+            int pid;
 
-            if (CFNumberGetValue (number, kCFNumberIntType, &uid))
-                rb_hash_aset (hash, ID2SYM (rb_intern ("pid")), INT2FIX (uid));
+            if (CFNumberGetValue (number, kCFNumberIntType, &pid))
+                rb_hash_aset (hash, ID2SYM (rb_intern ("pid")), INT2FIX (pid));
         }
 
         rb_ary_push (ary, hash);

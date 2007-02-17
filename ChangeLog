@@ -10,6 +10,11 @@
 	- Updated test cases.
 
 	* src/lib/rbosa.rb,
+	  tests/tc_textedit.rb:
+	Make sure we properly validate the command arguments number, added some test
+	cases.
+
+	* src/lib/rbosa.rb,
 	  src/rbosa.c,
 	  src/rbosa_sdef.c:
 	- Now automatically retrieving the remote application sdef ;

@@ -145,4 +145,10 @@ class TC_TextEdit < Test::Unit::TestCase
       doc.close
     end
   end
+
+  def test_make_document_arg_errors
+    assert_raises(ArgumentError) { @textedit.make }
+    assert_raises(ArgumentError) { @textedit.make(:with_properties => {}) }
+    assert_raises(ArgumentError) { @textedit.make(OSA::TextEdit::Document, :with_properties => {}, :invalid_parameter => 42) }
+  end
 end

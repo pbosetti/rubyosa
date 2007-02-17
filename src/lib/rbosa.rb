@@ -721,15 +721,17 @@ module OSA
                         if optional_hash
                             arg = optional_hash.delete(pname.intern)
                         end 
-                        if arg.nil? and already_has_optional_args
-                            []
+                        if arg.nil?
+                            if already_has_optional_args
+                                []
+                            end
                         else
                             [pcode, arg.is_a?(OSA::Element) ? arg : OSA::Element.from_rbobj(ptype, arg, enum_group_codes.keys)]
                         end
                     end
                     args << val
                 end
-                if args_ary.size > params.size
+                if args_ary.size > params.size or args_ary.size < min_argc
                     raise ArgumentError, "wrong number of arguments (#{args_ary.size} for #{min_argc})"
                 end
                 if optional_hash and !optional_hash.empty?

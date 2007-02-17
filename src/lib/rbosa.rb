@@ -280,7 +280,25 @@ module OSA
         self.__app__(*OSA.__scripting_info__(:signature => signature))
     end
 
-    def self.app(args)
+    def self.app(*args)
+        if args.size == 2
+            if args.first.is_a?(String) and args.last.is_a?(Hash)
+                hash = args.last
+                if hash.has_key?(:name)
+                    warn "Given Hash argument already has a :name key, ignoring the first String argument `#{args.first}'"
+                else
+                    hash[:name] = args.first
+                end
+                args = hash
+            else
+                raise ArgumentError, "when called with 2 arguments, the first is supposed to be a String and the second a Hash"
+            end
+        else
+            if args.size != 1
+                raise ArgumentError, "wrong number of arguments (#{args.size} for at least 1)"
+            end
+            args = args.first
+        end
         args = { :name => args } if args.is_a?(String)
         self.__app__(*OSA.__scripting_info__(args))
     end

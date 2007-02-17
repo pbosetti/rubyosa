@@ -168,7 +168,7 @@ rbosa_element_new (VALUE self, VALUE type, VALUE value)
     error = AECreateDesc (ffc_type, c_value, c_value_size, &desc);
     if (error != noErr)     
         rb_raise (rb_eArgError, "Cannot create Apple Event descriptor from type '%s' value '%s' : %s (%d)", 
-                  RVAL2CSTR (type), c_value, GetMacOSStatusErrorString (error), error);
+                  RVAL2CSTR (type), c_value, error_code_to_string (error), error);
 
     return rbosa_element_make (self, &desc, Qnil);
 }
@@ -188,7 +188,7 @@ rbosa_element_new_os (VALUE self, VALUE desired_class, VALUE container, VALUE ke
 
     if (error != noErr) 
         rb_raise (rb_eArgError, "Cannot create Apple Event object specifier for desired class '%s' : %s (%d)", 
-                  RVAL2CSTR (desired_class), GetMacOSStatusErrorString (error), error);
+                  RVAL2CSTR (desired_class), error_code_to_string (error), error);
 
     return rbosa_element_make (self, &obj_specifier, Qnil);
 }
@@ -204,7 +204,7 @@ rbosa_element_dup (VALUE self, VALUE element)
     error = AEDuplicateDesc (desc, &new_desc);
     if (error != noErr) 
         rb_raise (rb_eArgError, "Cannot duplicate element : %s (%d)", 
-                  GetMacOSStatusErrorString (error), error);
+                  error_code_to_string (error), error);
 
     return rbosa_element_make (self, &new_desc, Qnil); 
 }
@@ -280,7 +280,7 @@ rbosa_app_send_event (VALUE self, VALUE event_class, VALUE event_id, VALUE param
                                 &ae);
     if (error != noErr)
         rb_raise (rb_eArgError, "Cannot create Apple Event '%s%s' : %s (%d)", 
-                  RVAL2CSTR (event_class), RVAL2CSTR (event_id), GetMacOSStatusErrorString (error), error);
+                  RVAL2CSTR (event_class), RVAL2CSTR (event_id), error_code_to_string (error), error);
 
     if (!NIL_P (params)) {
         unsigned    i;
@@ -301,7 +301,7 @@ rbosa_app_send_event (VALUE self, VALUE event_class, VALUE event_id, VALUE param
             if (error != noErr) { 
                 AEDisposeDesc (&ae); 
                 rb_raise (rb_eArgError, "Cannot add Apple Event parameter '%s' : %s (%d)", 
-                          RVAL2CSTR (type), GetMacOSStatusErrorString (error), error);
+                          RVAL2CSTR (type), error_code_to_string (error), error);
             }
         } 
     }
@@ -316,7 +316,7 @@ rbosa_app_send_event (VALUE self, VALUE event_class, VALUE event_id, VALUE param
 
     if (error != noErr)
         rb_raise (rb_eRuntimeError, "Cannot send Apple Event '%s%s' : %s (%d)", 
-                  RVAL2CSTR (event_class), RVAL2CSTR (event_id), GetMacOSStatusErrorString (error), error);
+                  RVAL2CSTR (event_class), RVAL2CSTR (event_id), error_code_to_string (error), error);
 
     __rbosa_raise_potential_app_error (&reply);
 
@@ -372,7 +372,7 @@ rbosa_element_data (int argc, VALUE *argv, VALUE self)
         error = AECoerceDesc (desc, code, &coerced_desc);
         if (error != noErr)
             rb_raise (rb_eRuntimeError, "Cannot coerce desc to type %s : %s (%d)", 
-                      RVAL2CSTR (coerce_type), GetMacOSStatusErrorString (error), error);
+                      RVAL2CSTR (coerce_type), error_code_to_string (error), error);
         
         desc = &coerced_desc;
         to_4cc = code == 'type';
@@ -399,7 +399,7 @@ rbosa_element_data (int argc, VALUE *argv, VALUE self)
 
     if (error != noErr)
         rb_raise (rb_eRuntimeError, "Cannot get desc data : %s (%d)", 
-                  GetMacOSStatusErrorString (error), error);
+                  error_code_to_string (error), error);
     
     return retval; 
 }
@@ -512,7 +512,7 @@ __rbosa_elementlist_count (AEDescList *list)
     error = AECountItems (list, &count);
     if (error != noErr)
         rb_raise (rb_eRuntimeError, "Cannot count items : %s (%d)", 
-                  GetMacOSStatusErrorString (error), error);
+                  error_code_to_string (error), error);
 
     return count;
 }
@@ -525,7 +525,7 @@ __rbosa_elementlist_add (AEDescList *list, VALUE element, long pos)
     error = AEPutDesc (list, pos, rbosa_element_aedesc (element));
     if (error != noErr)
         rb_raise (rb_eRuntimeError, "Cannot add given descriptor : %s (%d)", 
-                  GetMacOSStatusErrorString (error), error);
+                  error_code_to_string (error), error);
 }
 
 static VALUE
@@ -544,7 +544,7 @@ rbosa_elementlist_new (int argc, VALUE *argv, VALUE self)
     error = AECreateList (NULL, 0, false, &list);
     if (error != noErr) 
         rb_raise (rb_eRuntimeError, "Cannot create Apple Event descriptor list : %s (%d)", 
-                  GetMacOSStatusErrorString (error), error);
+                  error_code_to_string (error), error);
 
     if (!NIL_P (ary)) {
         for (i = 0; i < RARRAY (ary)->len; i++)
@@ -579,7 +579,7 @@ __rbosa_elementlist_get (VALUE self, long index, AEKeyword *keyword)
     
     if (error != noErr)
         rb_raise (rb_eRuntimeError, "Cannot get desc at index %d : %s (%d)", 
-                  index, GetMacOSStatusErrorString (error), error);
+                  index, error_code_to_string (error), error);
 
     return rbosa_element_make (cOSAElement, &desc, rb_ivar_get (self, sApp));
 }
@@ -605,7 +605,7 @@ __rbosa_elementrecord_set (VALUE key, VALUE value, AEDescList *list)
     error = AEPutKeyDesc (list, RVAL2FOURCHAR (key), rbosa_element_aedesc (value));
     if (error != noErr) 
         rb_raise (rb_eRuntimeError, "Cannot set value %p for key %p of record %p: %s (%d)", 
-                  value, key, list, GetMacOSStatusErrorString (error), error);
+                  value, key, list, error_code_to_string (error), error);
  
     return ST_CONTINUE;
 }
@@ -625,7 +625,7 @@ rbosa_elementrecord_new (int argc, VALUE *argv, VALUE self)
     error = AECreateList (NULL, 0, true, &list);
     if (error != noErr) 
         rb_raise (rb_eRuntimeError, "Cannot create Apple Event descriptor list : %s (%d)", 
-                  GetMacOSStatusErrorString (error), error);
+                  error_code_to_string (error), error);
 
     if (!NIL_P (hash)) 
         rb_hash_foreach (hash, __rbosa_elementrecord_set, (VALUE)&list);

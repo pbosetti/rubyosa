@@ -1,5 +1,14 @@
 2007-02-17  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* tests/tc_get_app.rb,
+	  src/rbosa_err.c,
+	  src/lib/rbosa.rb,
+	  src/rbosa.c,
+	  src/rbosa_sdef.c:
+	- Better error messages ;
+	- Accept OSA.app('AppName', :option => ...) syntax ;
+	- Updated test cases.
+
 	* src/lib/rbosa.rb,
 	  src/rbosa.c,
 	  src/rbosa_sdef.c:

@@ -196,8 +196,8 @@ get_remote_app_sdef (const char *target_url)
 #define BOOM(m) \
     do { \
         rb_raise (rb_eRuntimeError, \
-                  "Can't get scripting definition of remote application (%s) : error %d", \
-                  m, osa_error); \
+                  "Can't get scripting definition of remote application (%s) : %s (%d)", \
+                  m, error_code_to_string (osa_error), osa_error); \
     } while (0)
 
     // XXX we should try to get the sdef via ascr/gsdf before trying to convert the AETE!

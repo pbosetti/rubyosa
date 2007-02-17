@@ -101,5 +101,5 @@ error_code_to_string (const int code)
     case errAECantPutThatThere: return "In make new, duplicate, etc. class can't be an element of container";
     case errAEPropertiesClash: return "Illegal combination of properties settings for SetData, make new, or duplicate";
   }
-  return NULL;
+  return GetMacOSStatusErrorString (code);
 }

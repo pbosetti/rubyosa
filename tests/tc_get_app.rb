@@ -8,6 +8,7 @@ class TC_GetApp < Test::Unit::TestCase
 
     def test_by_name
         assert_equal('iTunes', @itunes.name)
+        assert_equal('iTunes', OSA.app('iTunes', {}).name)
         assert_raises(RuntimeError) { OSA.app(:name => 'SomethingThatDoesNotExist') }
     end
 
@@ -36,5 +37,9 @@ class TC_GetApp < Test::Unit::TestCase
         assert_raises(ArgumentError) { OSA.app() }
         assert_raises(ArgumentError) { OSA.app(:foo => 123) }
         assert_raises(ArgumentError) { OSA.app(:name => 'iTunes', :foo => 123) }
+        assert_raises(ArgumentError) { OSA.app(1, 2, 3) }
+        assert_raises(ArgumentError) { OSA.app(42, 42) }
+        assert_raises(ArgumentError) { OSA.app('iTunes', 42) }
+        assert_raises(ArgumentError) { OSA.app(42, {}) }
     end
 end

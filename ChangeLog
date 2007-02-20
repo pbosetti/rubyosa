@@ -1,3 +1,9 @@
+2007-02-20  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* sample/iTunes/tag_genre_lastfm.rb:
+	Added new iTunes sample, contributed by Wes Rogers <wesrog@gmail.com> and
+	slightly modified to tag the selected tracks and not only the current track.
+
 2007-02-17  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* tests/tc_get_app.rb,

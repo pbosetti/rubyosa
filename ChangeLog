@@ -1,3 +1,11 @@
+2007-02-27  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* AUTHORS:
+	Added Wes and Terry.
+
+	* sample/Mail/get_selected_mail.rb:
+	Added new Mail/TextEdit sample, contributed by Terry Donoghue.
+
 2007-02-20  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* sample/iTunes/tag_genre_lastfm.rb:

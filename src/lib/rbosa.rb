@@ -738,7 +738,7 @@ module OSA
                 if optional_hash and !optional_hash.empty?
                     raise ArgumentError, "inappropriate optional argument(s): #{optional_hash.keys.join(', ')}"
                 end
-                wait_reply = OSA.wait_reply != nil ? OSA.wait_reply : (has_result or @app.remote?) 
+                wait_reply = (OSA.wait_reply != nil ? OSA.wait_reply : (has_result or @app.remote?)) 
                 ret = @app.__send_event__(code[0..3], code[4..-1], args, wait_reply)
                 wait_reply ? ret.to_rbobj : ret
             end

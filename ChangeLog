@@ -2,7 +2,7 @@
 
 	* src/lib/rbosa.rb:
 	- Send a ascr/gdut event after having merged a scriptable addition sdef ;
-	- Make sure to always configure commands events to get a return value.
+	- Do not set the same constant twice.
 
 2007-02-27  Laurent Sansonetti  <lsansonetti@apple.com>
 

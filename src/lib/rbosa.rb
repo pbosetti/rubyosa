@@ -466,7 +466,7 @@ module OSA
                 documentation << DocItem.new(enum_name, englishify_sentence(element['description']))
             end
  
-            app_module.const_set(enum_module_name, enum_module)
+            app_module.const_set(enum_module_name, enum_module) unless app_module.const_defined?(enum_module_name)
         end
 
         # Retrieves and creates classes.
@@ -738,7 +738,8 @@ module OSA
                 if optional_hash and !optional_hash.empty?
                     raise ArgumentError, "inappropriate optional argument(s): #{optional_hash.keys.join(', ')}"
                 end
-                @app.__send_event__(code[0..3], code[4..-1], args, true).to_rbobj
+                ret = @app.__send_event__(code[0..3], code[4..-1], args, (has_result or @app.remote?))
+                has_result ? ret.to_rbobj : ret
             end
 
             unless has_result

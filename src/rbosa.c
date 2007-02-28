@@ -703,4 +703,5 @@ Init_osa (void)
     rbosa_define_param ("timeout", INT2NUM (kAEDefaultTimeout));
     rbosa_define_param ("lazy_events", Qtrue);
     rbosa_define_param ("utf8_strings", Qfalse);
+    rbosa_define_param ("wait_reply", Qnil);
 }

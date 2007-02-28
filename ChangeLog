@@ -1,5 +1,11 @@
 2007-02-28  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* src/lib/rbosa.rb,
+	  src/rbosa.c:
+	Added a new global setting to control either a return value should be 
+	expected or not from the following Apple events. Variable is OSA.wait_reply, 
+	default value is nil which means "automatic behavior".
+
 	* src/lib/rbosa.rb:
 	- Send a ascr/gdut event after having merged a scriptable addition sdef ;
 	- Do not set the same constant twice.

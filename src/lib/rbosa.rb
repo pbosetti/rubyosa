@@ -378,11 +378,11 @@ module OSA
     def self.set_params(hash)
         previous_values = {}
         hash.each do |key, val|
-            ivar_key = '@' + key.to_s
-            previous_val = self.instance_variable_get(ivar_key)
-            if previous_val.nil?
+            unless OSA.respond_to?(key)
                 raise ArgumentError, "Invalid key value (no parameter named #{key} was found)"
             end
+            ivar_key = '@' + key.to_s
+            previous_val = self.instance_variable_get(ivar_key)
             previous_values[ivar_key] = previous_val;
             self.instance_variable_set(ivar_key, hash[key])
         end
@@ -738,8 +738,9 @@ module OSA
                 if optional_hash and !optional_hash.empty?
                     raise ArgumentError, "inappropriate optional argument(s): #{optional_hash.keys.join(', ')}"
                 end
-                ret = @app.__send_event__(code[0..3], code[4..-1], args, (has_result or @app.remote?))
-                has_result ? ret.to_rbobj : ret
+                wait_reply = (has_result or @app.remote? or OSA.wait_reply == true)
+                ret = @app.__send_event__(code[0..3], code[4..-1], args, wait_reply)
+                wait_reply ? ret.to_rbobj : ret
             end
 
             unless has_result

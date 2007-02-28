@@ -255,6 +255,7 @@ module OSA::EventDispatcher
         app_module_name = self.class.name.scan(/^OSA::(.+)::.+$/).flatten.first
         app_module = OSA.const_get(app_module_name) 
         OSA.__load_sdef__(sdef, target, app_module, true, self.class)
+        (self.__send_event__('ascr', 'gdut', [], true) rescue nil) # Don't ask me why...
         return self 
     end
 end
@@ -737,8 +738,7 @@ module OSA
                 if optional_hash and !optional_hash.empty?
                     raise ArgumentError, "inappropriate optional argument(s): #{optional_hash.keys.join(', ')}"
                 end
-                ret = @app.__send_event__(code[0..3], code[4..-1], args, (has_result || @app.remote?))
-                has_result ? ret.to_rbobj : ret
+                @app.__send_event__(code[0..3], code[4..-1], args, true).to_rbobj
             end
 
             unless has_result

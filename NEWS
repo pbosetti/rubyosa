@@ -1,4 +1,46 @@
 =============
+RubyOSA 0.3.0
+=============
+
+Features:
+- Can control applications running on remote machines ;
+- Now possible to pass optional arguments using key/value Hash pairs (the old 
+  way is still possible) ;
+- added support for merging scripting additions definitions to the current 
+  application ;
+- Better unified API ;
+- Added new samples: AddressBook/inspect, iTunes/tag_genre_lastfm, 
+  Mail/get_selected_mail ; 
+- Translating property codes to human-readable symbols ;
+- More human-readable errors ;
+- Added support for before/after location reference types ;
+- Faster (no more costly evaluation calls).
+
+Bugfixes:
+- Fixed handling of application-level errors ;
+- Unescape the converted 'alis' paths ;
+- Now building 64-bit ;
+- Make sure '$' and '=' are escaped when generating Ruby symbols ;
+- Added a functional test suite ;
+- Fixed the OSA -> Ruby 'TIFF' conversion ;
+- Fixed the Ruby -> OSA 'list_of_*' conversion ;
+- Make sure we send events with the user-can-interact flag set on ;
+- Better RDoc generation (removed the Files frame, references to the generated
+  dummy Ruby file and source code, changed the default HTML title) ;
+- Better inspect methods for OSA::Element and OSA::ObjectSpecifierList ;
+- Same conversion behavior for 'type' than 'type class' ;
+- Smarter #get method, if the resolved object doesn't inherit from the desired 
+  class, and if it has a property method with a class key/value, return a new 
+  descriptor of the desired class ;
+- Honors the 'id' attribute of the sdef format ;
+- Be smarter when converting types from Ruby to OSA, making sure primitive
+  types are always converted ;
+- Fixed a memory leak ;
+- Added a new global setting to control either a return value should be
+  expected or not from the following Apple events. Variable is OSA.wait_reply,
+  default value is nil which means "automatic behavior".
+
+=============
 RubyOSA 0.2.0
 =============
 

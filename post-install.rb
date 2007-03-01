@@ -31,6 +31,7 @@ include FileUtils
 def install(file, dest)
   mkdir_p(dest)
   path = File.join(dest, File.basename(file))
+  puts "cp #{file} #{dest}"
   cp(file, path)
   chmod(0755, path)
 end

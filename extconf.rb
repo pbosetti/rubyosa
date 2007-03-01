@@ -53,8 +53,7 @@ end
 # Generate the Makefile
 create_makefile('osa', 'src')
 
-# Tweak the Makefile to call post-install.rb after the install target.
+# Tweak the Makefile to add an extra install task.
 text = File.read('Makefile')
-text.sub!(/install: install-so install-rb/, 'install: install-so install-rb post-install')
-text << "\n\npost-install: post-install.rb\n\t@$(RUBY) post-install.rb\n\n"
+text << "\n\ninstall-extras: post-install.rb\n\t@$(RUBY) post-install.rb\n\n"
 File.open('Makefile', 'w') { |io| io.write(text) }

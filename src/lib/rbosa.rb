@@ -918,7 +918,7 @@ OSA.add_conversion_to_osa('Unicode text') { |value| [OSA.utf8_strings ? 'utf8' :
 # Signed/unsigned integer. 
 OSA.add_conversion_to_ruby('shor', 'long') { |value| value.unpack('l').first }
 OSA.add_conversion_to_ruby('comp') { |value| value.unpack('q').first }
-OSA.add_conversion_to_ruby('magn') { |value| value.unpack('d').first }
+OSA.add_conversion_to_ruby('magn', 'doub') { |value| value.unpack('d').first }
 OSA.add_conversion_to_osa('integer', 'double integer') { |value| ['magn', [value].pack('l')] }
 
 # Float

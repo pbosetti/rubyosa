@@ -1,5 +1,10 @@
 2007-03-02  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* rubyosa.gemspec,
+	  NEWS,
+	  README:
+	Final sync for 0.3.0.
+
 	* src/lib/rbosa.rb:
 	Convert the 'doub' OSA type as double.
 

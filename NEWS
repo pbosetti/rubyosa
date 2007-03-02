@@ -67,7 +67,8 @@ Bugfixes:
   Ruby 1.8.2 ;
 - Try to require 'rubygems' in samples, as RubyOSA may have been
   installed as a gem ;
-- Fixed generated code for methods taking an enumeration-like parameter. 
+- Fixed generated code for methods taking an enumeration-like parameter ;
+- Convert the 'doub' OSA type as a Ruby double.
 
 =============
 RubyOSA 0.1.0

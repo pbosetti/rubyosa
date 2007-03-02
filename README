@@ -32,6 +32,8 @@ utility.
 
 == Support ==
 
+A tutorial is available online at http://rubyosa.rubyforge.org/tutorial.html.
+
 Sample code is available in the `sample' sub-directory.
 
 The rdoc-osa tool can be used to generate API reference documentation

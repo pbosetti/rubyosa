@@ -1,3 +1,8 @@
+2007-03-02  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* rubyosa.gemspec:
+	Forgot to include 'data/rubyosa/...', released a 0.3.0.1 version of the gem.
+
 === RubyOSA 0.3.0 ===
 
 2007-03-02  Laurent Sansonetti  <lsansonetti@apple.com>

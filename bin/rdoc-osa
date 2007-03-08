@@ -72,6 +72,17 @@ end
 DOC_NOT_AVAILABLE = 'Documentation not available.'
 
 app = OSA.app(key => ARGV[1])
+app_name = if app.respond_to?(:name)
+    app.name
+else
+    if key != :name
+        STDERR.puts "Can't guess the application name, because the application doesn't have a #name method. Please use `--name' instead."
+        exit 1
+    else
+        ARGV[1]
+    end
+end
+
 mod = OSA.const_get(app.class.name.scan(/^OSA::(.+)::Application$/).to_s)
 fake_ruby_src = mod.constants.map do |const_name|
     obj = mod.const_get(const_name)
@@ -142,15 +153,15 @@ end.
 join
 
 fake_ruby_src = <<EOS + fake_ruby_src
-# This documentation describes the RubyOSA API for the #{app.name} application. It has been automatically generated.
+# This documentation describes the RubyOSA API for the #{app_name} application. It has been automatically generated.
 #
 # The main class is #{mod.name}::Application, of which an instance is created likewise:
 #
-#   OSA.app('#{app.name}')
+#   OSA.app('#{app_name}')
 #
 # For more information about RubyOSA, please visit the project homepage: http://rubyosa.rubyforge.org.
 module OSA; end
-# The #{app.name} module.
+# The #{app_name} module.
 module #{mod.name}; end
 EOS
 
@@ -159,11 +170,11 @@ template = File.join(Config.datadir('rubyosa'), 'rdoc_html.rb')
 if File.exists?(template)
     rdoc_flags << " --template '#{template}' "
 end
-rdoc_flags << " --title '#{app.name} RubyOSA API' "
+rdoc_flags << " --title '#{app_name} RubyOSA API' "
 rdoc_flags << ' --main OSA '
 rdoc_flags << ARGV[2..-1].join(' ')
 
-path = unique_tmp_path(app.name, '.rb')
+path = unique_tmp_path(app_name, '.rb')
 File.open(path, 'w') { |io| io.puts fake_ruby_src }
 line = "rdoc #{rdoc_flags} \"#{path}\""
 unless system(line)

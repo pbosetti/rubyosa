@@ -124,4 +124,10 @@ class TC_iTunes < Test::Unit::TestCase
       FileUtils.rm_f('/tmp/foo.mp3')
     end
   end
+
+  def test_get_name_of_sources
+    ary = @itunes.sources.name
+    assert_kind_of(Array, ary)
+    assert_equal(ary.length, @itunes.sources.length)
+  end
 end

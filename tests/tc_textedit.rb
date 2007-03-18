@@ -146,6 +146,33 @@ class TC_TextEdit < Test::Unit::TestCase
     end
   end
 
+  def test_get_font_and_color_of_words
+    doc = @textedit.make(OSA::TextEdit::Document)
+    begin
+      assert_kind_of(OSA::TextEdit::Document, doc)
+      ary = %w{a b c d e f}
+      doc.text = ary.join(' ')
+      assert_equal(doc.text.words.size, ary.size)
+      ary2 = doc.text.words.font
+      assert_equal(ary.size, ary2.size)
+      ary2.each { |f| assert_kind_of(String, f) }
+      ary3 = doc.text.words.color
+      assert_equal(ary.size, ary3.size)
+      ary3.each { |c| assert_kind_of(OSA::TextEdit::Color, c) }
+      ary4 = doc.text.words.color.get
+      assert_equal(ary.size, ary4.size)
+      ary4.each do |v|
+        assert_kind_of(Array, v)
+        assert_equal([0, 0, 0], v)
+      end
+      blue = [0, 0, 65535]
+      doc.text.words[0].color = blue
+      assert_equal(blue, doc.text.words[0].color.get)
+    ensure
+      doc.close
+    end 
+  end
+
   def test_make_document_arg_errors
     assert_raises(ArgumentError) { @textedit.make }
     assert_raises(ArgumentError) { @textedit.make(:with_properties => {}) }

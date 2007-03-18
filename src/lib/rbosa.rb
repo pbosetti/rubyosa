@@ -111,7 +111,7 @@ class OSA::Element
     def to_rbobj
       unless __type__ == 'null'
         val = OSA.convert_to_ruby(self)
-        val == nil ? self : val
+        val == 'msng' ? nil : val == nil ? self : val
       end
     end
     
@@ -189,6 +189,14 @@ class OSA::ObjectSpecifierList
         o.extend OSA::ObjectSpecifier
     end
 
+    def first
+        self[0]
+    end
+
+    def last
+        self[-1]
+    end
+
     def each
         self.length.times { |i| yield(self[i]) }
     end
@@ -209,6 +217,23 @@ class OSA::ObjectSpecifierList
 
     def inspect
         super.scan(/^([^ ]+)/).to_s << " desired_class=#{@desired_class}>"
+    end
+
+    def method_missing(sym, *args)
+        if args.empty? and @desired_class.method_defined?(sym) and code = OSA.sym_to_code(sym)
+            o = obj_spec_with_key(OSA::Element.__new__('abso', 'all '.to_4cc))
+            pklass = @app.classes[code]
+            if pklass.nil? or !OSA.lazy_events
+                @app.__send_event__('core', 'getd', 
+                    [['----', OSA::Element.__new_object_specifier__('prop', o,
+                    'prop', OSA::Element.__new__('type', code.to_4cc))]],
+                    true).to_rbobj
+            else
+                OSA::ObjectSpecifierList.new(@app, pklass, o)
+            end
+        else
+            raise NoMethodError, "undefined method `#{sym.to_s}' with arity `#{args.length}' for #{self.inspect}"
+        end
     end
 
     #######
@@ -764,7 +789,7 @@ module OSA
             hash = {}
             classes.each_value { |klass| hash[klass::CODE] = klass } 
             app_class.class_eval do 
-                attr_reader :sdef
+                attr_reader :sdef, :classes
                 define_method(:remote?) { @is_remote == true }
             end
             is_remote = target.length > 4
@@ -965,7 +990,7 @@ OSA.add_conversion_to_osa('type class', 'type') { |value| value.is_a?(Class) and
 OSA.add_conversion_to_ruby('type') do |value, type, object| 
   if value == 'msng' 
     # Missing values.
-    nil
+    value 
   else
     hash = object.instance_variable_get(:@app).instance_variable_get(:@classes)
     hash[value] or value
@@ -983,5 +1008,12 @@ OSA.add_conversion_to_ruby('imaA') { |value, type, object| value }
 OSA.add_conversion_to_ruby('TIFF') { |value, type, object| value }
 OSA.add_conversion_to_osa('Image') { |value| ['imaA', value.to_s] }
 OSA.add_conversion_to_osa('TIFF picture') { |value| ['TIFF', value.to_s] }
+
+# RGB color.
+OSA.add_conversion_to_ruby('cRGB') { |value| value.unpack('S3') }
+OSA.add_conversion_to_osa('color') do |values| 
+  ary = values.map { |i| OSA::Element.__new__('long', [i].pack('l')) }
+  OSA::ElementList.__new__(ary)
+end
 
 require 'rbosa_properties'

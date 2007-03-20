@@ -371,7 +371,12 @@ module OSA
             args = [value, requested_type]
             conversion.call(*args[0..(conversion.arity - 1)])
         elsif enum_group_codes and enum_group_codes.include?(requested_type)
-            ['enum', value.code.to_4cc]
+            if value.is_a?(Array)
+                ary = value.map { |x| OSA::Element.__new__('enum', x.code.to_4cc) } 
+                ElementList.__new__(ary)
+            else
+                ['enum', value.code.to_4cc]
+            end
         elsif md = /^list_of_(.+)$/.match(requested_type)
             ary = value.to_a.map do |elem| 
                 obj = convert_to_osa(md[1], elem, enum_group_codes) 

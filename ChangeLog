@@ -1,3 +1,9 @@
+2007-03-21  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* src/lib/rbosa.rb:
+	Allow multiple enum values to be passed into the same argument, packing
+	then in an array.
+
 2007-03-18  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* tests/tc_itunes.rb,

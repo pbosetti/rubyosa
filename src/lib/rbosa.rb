@@ -787,6 +787,18 @@ module OSA
                 methods_doc = klass.const_get(:METHODS_DESCRIPTION)
                 methods_doc << DocMethod.new(method_name, englishify_sentence(description), result_doc, params_doc)
             end
+            
+            # Merge some additional commands, if necessary.
+            unless app_class.method_defined?(:activate)
+                app_class.class_eval do
+                    define_method(:activate) do 
+                        __send_event__('misc', 'actv', [], true)
+                        nil
+                    end
+                end
+                methods_doc = app_class.const_get(:METHODS_DESCRIPTION)
+                methods_doc << DocMethod.new('activate', 'Activate the application.', nil, []) 
+            end
         end
 
         unless merge_only

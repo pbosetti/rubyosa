@@ -6,6 +6,9 @@
 	- Merge a custom method to every application class, `activate', that sends
 	  the 'misc/actv' event.
 
+	* tests/tc_textedit.rb:
+	Added test cases.
+
 2007-03-18  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* tests/tc_itunes.rb,

@@ -173,6 +173,30 @@ class TC_TextEdit < Test::Unit::TestCase
     end 
   end
 
+  def test_system_events_keystrokes
+    se = OSA.app('System Events')
+    @textedit.activate
+    
+    doc = @textedit.make(OSA::TextEdit::Document)
+    doc.text = 'foo'
+    assert_equal('foo', doc.text.get)
+
+    begin
+      OSA.wait_reply = true
+      se.keystroke('a', :using => OSA::SystemEvents::EMDS::COMMAND_DOWN) # select all
+      se.keystroke('x', :using => OSA::SystemEvents::EMDS::COMMAND_DOWN) # cut
+      assert_equal('', doc.text.get)
+      se.keystroke('z', :using => OSA::SystemEvents::EMDS::COMMAND_DOWN) # undo
+      assert_equal('foo', doc.text.get)
+      se.keystroke('z', :using => [OSA::SystemEvents::EMDS::COMMAND_DOWN,
+                                   OSA::SystemEvents::EMDS::SHIFT_DOWN]) # redo
+      assert_equal('', doc.text.get)
+      doc.close(:saving => OSA::TextEdit::SAVO::NO)
+    ensure
+      OSA.wait_reply = false
+    end
+  end
+
   def test_make_document_arg_errors
     assert_raises(ArgumentError) { @textedit.make }
     assert_raises(ArgumentError) { @textedit.make(:with_properties => {}) }

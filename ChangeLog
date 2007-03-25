@@ -1,7 +1,11 @@
 2007-03-25  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/lib/rbosa.rb:
-	Do not fail if a description attribute has an empty value.
+	- Do not fail if a description attribute has an empty value ;
+	- Do not fail if a class inherits from a class that hasn't been defined yet.
+
+	* tests/tc_ical.rb:
+	Added test case.
 
 2007-03-21  Laurent Sansonetti  <lsansonetti@apple.com>
 

@@ -842,14 +842,13 @@ module OSA
         klass = Class.new(OSA::Element)
       else
         super_elements = class_elements[inherits]
-        if super_elements.nil?
+        super_class = if super_elements.nil?
           STDERR.puts "sdef bug: class '#{real_name}' inherits from '#{inherits}' which is not defined - fall back inheriting from OSA::Element" if $DEBUG
-          klass = OSA::Element
+          OSA::Element
         else
-          super_class = add_class_from_xml_element(super_elements.first, class_elements, 
-                               repository, app_module)
-          klass = Class.new(super_class)
+          add_class_from_xml_element(super_elements.first, class_elements, repository, app_module)
         end
+        klass = Class.new(super_class)
       end
 
       klass.class_eval { include OSA::EventDispatcher } if real_name == 'application'

@@ -942,7 +942,7 @@ module OSA
     end
 
     def self.englishify_sentence(string)
-        return '' if string.nil?
+        return '' if string.nil? or string.empty?
         string[0] = string[0].chr.upcase
         string.strip!
         last = string[-1].chr

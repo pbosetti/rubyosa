@@ -33,7 +33,7 @@ class TC_iCal < Test::Unit::TestCase
   end
 
   def test_calendar_names
-    names = @ical.calendars.name
+    names = @ical.calendars.every(:name)
     assert_kind_of(Array, names)
     @ical.calendars.each_with_index do |cal, i|
       assert_equal(cal.name, names[i])

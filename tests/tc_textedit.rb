@@ -153,13 +153,13 @@ class TC_TextEdit < Test::Unit::TestCase
       ary = %w{a b c d e f}
       doc.text = ary.join(' ')
       assert_equal(doc.text.words.size, ary.size)
-      ary2 = doc.text.words.font
+      ary2 = doc.text.words.every(:font)
       assert_equal(ary.size, ary2.size)
       ary2.each { |f| assert_kind_of(String, f) }
-      ary3 = doc.text.words.color
+      ary3 = doc.text.words.every(:color)
       assert_equal(ary.size, ary3.size)
       ary3.each { |c| assert_kind_of(OSA::TextEdit::Color, c) }
-      ary4 = doc.text.words.color.get
+      ary4 = doc.text.words.every(:color).get
       assert_equal(ary.size, ary4.size)
       ary4.each do |v|
         assert_kind_of(Array, v)

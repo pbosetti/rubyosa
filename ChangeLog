@@ -1,3 +1,12 @@
+2007-03-26  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* src/lib/rbosa.rb,
+	  tests/tc_ical.rb,
+	  tests/tc_textedit.rb:
+	- Re-implemented the way to get all attributes of an object specifier list 
+	  object, now using #every(:attribute_name) instead of #attribute_name ;
+	- Updated test cases.
+
 2007-03-25  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* src/lib/rbosa.rb:

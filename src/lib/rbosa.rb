@@ -219,8 +219,8 @@ class OSA::ObjectSpecifierList
     super.scan(/^([^ ]+)/).to_s << " desired_class=#{@desired_class}>"
   end
 
-  def method_missing(sym, *args)
-    if args.empty? and @desired_class.method_defined?(sym) and code = OSA.sym_to_code(sym)
+  def every(sym)
+    if @desired_class.method_defined?(sym) and code = OSA.sym_to_code(sym)
       o = obj_spec_with_key(OSA::Element.__new__('abso', 'all '.to_4cc))
       pklass = @app.classes[code]
       if pklass.nil? or !OSA.lazy_events
@@ -232,7 +232,7 @@ class OSA::ObjectSpecifierList
         OSA::ObjectSpecifierList.new(@app, pklass, o)
       end
     else
-      raise NoMethodError, "undefined method `#{sym.to_s}' with arity `#{args.length}' for #{self.inspect}"
+      raise ArgumentError, "desired class `#{@desired_class}' does not have a attribute named `#{sym.to_s}'"
     end
   end
 

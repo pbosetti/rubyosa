@@ -397,6 +397,7 @@ module OSA
         when Array then 'list'
         when Hash then 'record'
         when Integer then 'integer'
+        when Float then 'double'
       end
       if new_type
         ary = __convert_to_osa__(new_type, value, enum_group_codes)
@@ -959,11 +960,12 @@ OSA.add_conversion_to_osa('Unicode text') { |value| [OSA.utf8_strings ? 'utf8' :
 # Signed/unsigned integer. 
 OSA.add_conversion_to_ruby('shor', 'long') { |value| value.unpack('l').first }
 OSA.add_conversion_to_ruby('comp') { |value| value.unpack('q').first }
-OSA.add_conversion_to_ruby('magn', 'doub') { |value| value.unpack('d').first }
 OSA.add_conversion_to_osa('integer', 'double integer') { |value| ['magn', [value].pack('l')] }
 
 # Float
 OSA.add_conversion_to_ruby('sing') { |value| value.unpack('f').first }
+OSA.add_conversion_to_ruby('magn', 'doub') { |value| value.unpack('d').first }
+OSA.add_conversion_to_osa('double') { |value| ['doub', [value].pack('d')] }
 
 # Boolean.
 OSA.add_conversion_to_ruby('bool') { |value| value.unpack('c').first != 0 }
@@ -977,6 +979,15 @@ OSA.add_conversion_to_ruby('ldt ') { |value|
 }
 
 # Array.
+OSA.add_conversion_to_osa('list') do |value|
+  # The `list_of_XXX' types are not handled here.
+  if value.is_a?(Array)
+    elements = value.map { |x| OSA::Element.from_rbobj(nil, x, nil) }
+    OSA::ElementList.__new__(elements)
+  else
+    value
+  end
+end
 OSA.add_conversion_to_ruby('list') { |value, type, object| 
   object.is_a?(OSA::ElementList) ? object.to_a.map { |x| x.to_rbobj } : object
 }

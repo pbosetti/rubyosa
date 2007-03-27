@@ -98,6 +98,7 @@ end
   :pixel_depth, 'pdpt',
   :point_list, 'ptlt',
   :point_size, 'ptsz',
+  :size, 'ptsz', # A convenience shortcut to :point_size
   :protection, 'ppro',
   :rotation, 'prot',
   :scale, 'pscl',

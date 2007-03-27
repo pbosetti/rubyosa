@@ -7,6 +7,9 @@
 	- When converting an Hash object to OSA, property convert Array values ;
 	- Convert type-less Float objects to OSA.
 
+	* tests/tc_omnigraffle.rb:
+	Added a test case.
+
 2007-03-27  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* tc_itunes.rb:

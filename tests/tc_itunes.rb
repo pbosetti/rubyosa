@@ -126,7 +126,7 @@ class TC_iTunes < Test::Unit::TestCase
   end
 
   def test_get_name_of_sources
-    ary = @itunes.sources.name
+    ary = @itunes.sources.every(:name)
     assert_kind_of(Array, ary)
     assert_equal(ary.length, @itunes.sources.length)
   end

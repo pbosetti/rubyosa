@@ -30,8 +30,10 @@ module OSA
   @sym_to_code = {}
   @code_to_sym = {}
 
-  def self.add_property(sym, code)
-    return if @sym_to_code.has_key?(sym) or @code_to_sym.has_key?(code)
+  def self.add_property(sym, code, override=false)
+    unless override
+      return if @sym_to_code.has_key?(sym) or @code_to_sym.has_key?(code)
+    end
     @sym_to_code[sym] = code
     @code_to_sym[code] = sym
   end
@@ -98,7 +100,6 @@ end
   :pixel_depth, 'pdpt',
   :point_list, 'ptlt',
   :point_size, 'ptsz',
-  :size, 'ptsz', # A convenience shortcut to :point_size
   :protection, 'ppro',
   :rotation, 'prot',
   :scale, 'pscl',
@@ -135,3 +136,6 @@ end
   :visible, 'pvis'
 
 ].each_slice(2) { |sym, code| OSA.add_property(sym, code) }
+
+# A convenience shortcut to :point_size
+OSA.add_property(:size, 'ptsz', true)

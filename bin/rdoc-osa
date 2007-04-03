@@ -166,7 +166,7 @@ module #{mod.name}; end
 EOS
 
 rdoc_flags = ''
-template = File.join(Config.datadir('rubyosa'), 'rdoc_html.rb')
+template = File.join(Config::CONFIG['datadir'], 'rubyosa', 'rdoc_html.rb')
 if File.exists?(template)
     rdoc_flags << " --template '#{template}' "
 end

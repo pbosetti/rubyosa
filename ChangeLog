@@ -1,3 +1,9 @@
+2007-04-03  Wes Rogers  <wesrog@gmail.com>
+
+	* sample/iTunes/tag_genre_lastfm.rb:
+	New revision, that will only query Last.fm once per artist instead of multiple
+	times (to not abuse the webservice they provide). 
+
 2007-04-03  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* bin/rdoc-osa:

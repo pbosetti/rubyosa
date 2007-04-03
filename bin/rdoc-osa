@@ -28,9 +28,9 @@
 # IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-require 'rbosa'
 require 'tmpdir'
 require 'rbconfig'
+require 'rbosa'
 
 def usage
     STDERR.puts <<-EOS
@@ -166,7 +166,12 @@ module #{mod.name}; end
 EOS
 
 rdoc_flags = ''
-template = File.join(Config::CONFIG['datadir'], 'rubyosa', 'rdoc_html.rb')
+datadir = if Config.respond_to?(:datadir)
+  Config.datadir('rubyosa')
+else
+  File.join(Config::CONFIG['datadir'], 'rubyosa')
+end
+template = File.join(datadir, 'rdoc_html.rb')
 if File.exists?(template)
     rdoc_flags << " --template '#{template}' "
 end

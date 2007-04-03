@@ -1,7 +1,7 @@
 2007-04-03  Laurent Sansonetti  <lsansonetti@apple.com>
 
 	* bin/rdoc-osa:
-	Do not call Config.datadir anymore (possible incompatibility with 1.8.6).
+	Do not call Config.datadir if not defined (only RubyGems defines it). 
 
 2007-03-28  Laurent Sansonetti  <lsansonetti@apple.com>
 

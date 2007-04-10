@@ -1,3 +1,13 @@
+2007-05-11  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* AUTHORS:
+	Added Mike and Carlos.
+
+2007-05-11  Carlos Villela  <carlos.villela@gmail.com>
+
+	* sample/iTunes/name_that_tune.rb:
+	New sample code.
+
 2007-04-03  Wes Rogers  <wesrog@gmail.com>
 
 	* sample/iTunes/tag_genre_lastfm.rb:

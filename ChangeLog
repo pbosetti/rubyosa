@@ -1,5 +1,8 @@
 2007-05-11  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* bin/rdoc-osa:
+	Better generator, can now handle scripting additions.
+
 	* AUTHORS:
 	Added Mike and Carlos.
 

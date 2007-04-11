@@ -33,137 +33,180 @@ require 'rbconfig'
 require 'rbosa'
 
 def usage
-    STDERR.puts <<-EOS
-Usage: #{$0} [--name | --path | --bundle_id | --signature] <criterion> [rdoc-options...]
+  STDERR.puts <<-EOS
+Usage: #{$0} [--addition] [--name | --path | --bundle_id | --signature] <criterion> [rdoc-options...]
 Examples:
     # Generate HTML documentation for iTunes:
     #{$0} --name iTunes
     # Generate RI documentation for iTunes:
     #{$0} --name iTunes --ri
+    # Generate HTML documentation for the StandardAdditions scriptable addition:
+    #{$0} --addition --name StandardAdditions
 See rdoc --help for additional options.
 EOS
-    exit 1
+  exit 1
 end
 
 def unique_tmp_path(base, extension='', dir=Dir.tmpdir)
-   i = 0
-   loop do
-       p = File.join(dir, "#{base}-#{i}-#{Process.pid}" + extension)
-       return p unless File.exists?(p)
-       i += 1
-   end
+  i = 0
+  loop do
+    p = File.join(dir, "#{base}-#{i}-#{Process.pid}" + extension)
+    return p unless File.exists?(p)
+    i += 1
+  end
 end
 
 usage unless ARGV.length >= 2 
-
-key = case ARGV.first
-    when '--name'
-        :name
-    when '--path'
-        :path
-    when '--bundle_id'
-        :bundle_id
-    when '--signature'
-        :signature
-    else
-        usage
+addition = key = criterion = nil
+while arg = ARGV.shift
+  case arg
+  when '--addition'
+    addition = true
+  when '--name', '--path', '--bundle_id', '--signature'
+    if key
+      $stderr.puts "You cannot use --name, --path, --bundle_id or --signature more than once."
+      exit 1
+    end
+    key = arg[2..-1].intern
+    criterion = ARGV.shift
+    usage if criterion.nil?
+  else
+    if key and criterion
+      ARGV.unshift(arg)
+      break
+    end
+    usage
+  end
 end
 
 DOC_NOT_AVAILABLE = 'Documentation not available.'
 
-app = OSA.app(key => ARGV[1])
-app_name = if app.respond_to?(:name)
-    app.name
+app = app_name = nil
+
+if addition
+  app_name = criterion if key == :name
+  mod = Module.new
+  OSA.const_set('TheApplication', mod)
+  klass = Class.new(OSA::Element)
+  mod.const_set('Application', klass) 
+  klass.class_eval do
+    include OSA::EventDispatcher
+    METHODS_DESCRIPTION = []
+    DESCRIPTION = 'The application class.'
+  end
+  app = klass.new.merge(key => criterion)
 else
+  app = OSA.app(key => criterion)
+  app_name = if app.respond_to?(:name)
+    app.name
+  else
     if key != :name
-        STDERR.puts "Can't guess the application name, because the application doesn't have a #name method. Please use `--name' instead."
-        exit 1
+      STDERR.puts "Can't guess the application name, because the application doesn't have a #name method. Please use `--name' instead."
+      exit 1
     else
-        ARGV[1]
+      criterion
     end
+  end
 end
 
 mod = OSA.const_get(app.class.name.scan(/^OSA::(.+)::Application$/).to_s)
 fake_ruby_src = mod.constants.map do |const_name|
-    obj = mod.const_get(const_name)
-    case obj
-    when Class
-        # Class.
-        methods_desc = obj.const_get('METHODS_DESCRIPTION').map do |method|
-            args_doc, args_def, args_def_opt = '', '', ''
-            if method.args and !method.args.empty?
-                args_doc_ary, args_def_ary, args_def_opt_ary = [], [], []
-                method.args.each do |x| 
-                    arg = x.name
-                    desc = x.description
-                    desc = DOC_NOT_AVAILABLE if desc.empty?
-                    args_doc_ary << "  # #{arg}::\n  #    #{desc}" + (x.optional? ? ' Optional. Can be passed as a Hash key/value.' : '')
-                    if x.optional?
-                        args_def_ary << x.name + '=nil'
-                        args_def_opt_ary << ':' + x.name + ' => nil'
-                    else
-                        args_def_ary << x.name
-                        args_def_opt_ary << x.name
-                    end
-                end
-                args_doc = args_doc_ary.join("\n")
-                args_def = '(' + args_def_ary.join(', ') + ')'
-                args_def_opt = '(' + args_def_opt_ary.join(', ') + ')'
-            end
-            if method.result
-                args_doc << "\n" unless args_doc.empty?
-                desc = method.result.description
-                desc = DOC_NOT_AVAILABLE if desc.empty?
-                args_doc << "  # Returns::\n  #    #{desc}\n"
-            end
-            <<EOS
+  obj = mod.const_get(const_name)
+  case obj
+  when Class
+    # Class.
+    methods_desc = obj.const_get('METHODS_DESCRIPTION').map do |method|
+      args_doc, args_def, args_def_opt = '', '', ''
+      if method.args and !method.args.empty?
+        args_doc_ary, args_def_ary, args_def_opt_ary = [], [], []
+        method.args.each do |x| 
+          arg = x.name
+          desc = x.description
+          desc = DOC_NOT_AVAILABLE if desc.empty?
+          args_doc_ary << "  # #{arg}::\n  #  #{desc}" + (x.optional? ? ' Optional. Can be passed as a Hash key/value.' : '')
+          if x.optional?
+            args_def_ary << x.name + '=nil'
+            args_def_opt_ary << ':' + x.name + ' => nil'
+          else
+            args_def_ary << x.name
+            args_def_opt_ary << x.name
+          end
+        end
+        args_doc = args_doc_ary.join("\n")
+        args_def = '(' + args_def_ary.join(', ') + ')'
+        args_def_opt = '(' + args_def_opt_ary.join(', ') + ')'
+      end
+      if method.result
+        args_doc << "\n" unless args_doc.empty?
+        desc = method.result.description
+        desc = DOC_NOT_AVAILABLE if desc.empty?
+        args_doc << "  # Returns::\n  #  #{desc}\n"
+      end
+      <<EOS
   # call-seq:
-  #    #{method.name + args_def}
-  #    #{args_def_opt != args_def ? method.name + args_def_opt : ''}
+  #  #{method.name + args_def}
+  #  #{args_def_opt != args_def ? method.name + args_def_opt : ''}
   #
   # #{method.description}
 #{args_doc}
   def #{method.name}#{args_def}; end
 EOS
-        end
-        <<EOS
+    end
+    <<EOS
 # #{(obj.const_get('DESCRIPTION') || 'n/a')}
 class #{obj.name} < #{obj.superclass}
 #{methods_desc.join.rstrip}
 end
 
 EOS
-    when Module
-        # Enumeration group.
-        next unless obj.const_defined?(:DESCRIPTION)
-        enums_desc = obj.const_get(:DESCRIPTION).map do |item|
-            <<EOS
+  when Module
+    # Enumeration group.
+    next unless obj.const_defined?(:DESCRIPTION)
+    enums_desc = obj.const_get(:DESCRIPTION).map do |item|
+      <<EOS
   # #{item.description}
   #{item.name} = '#{obj.const_get(item.name).code}'
 EOS
-        end
-        <<EOS
+    end
+    <<EOS
 module #{mod.name}::#{const_name}
 #{enums_desc}
 end
 
 EOS
-    end
+  end
 end.
 join
 
-fake_ruby_src = <<EOS + fake_ruby_src
+header = if addition
+  <<EOS
+# This documentation describes the RubyOSA API for the #{criterion} scriptable addition. It has been automatically generated.
+#
+# In order to use this API you have to merge the scriptable addition into an application object. For instance:
+#
+#   OSA.app('iTunes').merge(#{app_name ? "'#{app_name}'" : ":#{key} => '#{criterion}'"})
+#
+# The module OSA::TheApplication is fake, everything inside will be defined in the module of the application you are controlling (for iTunes, in OSA::ITunes).
+EOS
+else
+  <<EOS
 # This documentation describes the RubyOSA API for the #{app_name} application. It has been automatically generated.
 #
 # The main class is #{mod.name}::Application, of which an instance is created likewise:
 #
 #   OSA.app('#{app_name}')
+EOS
+end
+
+header << <<EOS
 #
 # For more information about RubyOSA, please visit the project homepage: http://rubyosa.rubyforge.org.
 module OSA; end
 # The #{app_name} module.
 module #{mod.name}; end
 EOS
+
+fake_ruby_src = header << fake_ruby_src
 
 rdoc_flags = ''
 datadir = if Config.respond_to?(:datadir)
@@ -173,17 +216,17 @@ else
 end
 template = File.join(datadir, 'rdoc_html.rb')
 if File.exists?(template)
-    rdoc_flags << " --template '#{template}' "
+  rdoc_flags << " --template '#{template}' "
 end
 rdoc_flags << " --title '#{app_name} RubyOSA API' "
 rdoc_flags << ' --main OSA '
-rdoc_flags << ARGV[2..-1].join(' ')
+rdoc_flags << ARGV.join(' ')
 
 path = unique_tmp_path(app_name, '.rb')
 File.open(path, 'w') { |io| io.puts fake_ruby_src }
 line = "rdoc #{rdoc_flags} \"#{path}\""
 unless system(line)
-    STDERR.puts "Error when executing `#{line}' : #{$?}"
-    exit 1
+  STDERR.puts "Error when executing `#{line}' : #{$?}"
+  exit 1
 end
 File.unlink(path)

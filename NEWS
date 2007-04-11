@@ -1,4 +1,33 @@
 =============
+RubyOSA 0.4.0
+=============
+
+Features:
+- Added the possibility to retrieve from an object specifier list object the
+  values of a given attribute, via the 'every' method ;
+- Examples: iTunes/tag_genre_lastfm.rb (new revision that queries Last.fm only 
+  once per artist), iTunes/name_that_tune.rb, Photoshop/new_doc.rb,
+  Photoshop/new_doc_with_text.rb ;
+- The rdoc-osa tool now supports scripting additions (via the '--addition' 
+  argument) ;
+- Added conversion support for color types ;
+- Allow multiple enum values to be passed into the same argument (packing them 
+  in an array) ;
+- Merge an 'activate' method into application objects.
+
+Bugfixes:
+- Fixed the rdoc-osa tool for applications that do not have a name command ;
+- Fixed 'msng' type conversions ;
+- Do not fail if a description attribute has an empty value ;
+- Do not fail if a class inherits from a class that hasn't been defined yet ;
+- When converting an Hash object to OSA, property convert Array values ;
+- Convert type-less Float objects to OSA ;
+- Added the :size attribute as a shortcut to :point_size ;
+- Fixed the rdoc-osa tool to work when RubyGems isn't available in the machine ;
+- Make sure to include a 'subj' attribute to apple events without direct 
+  parameters.
+
+=============
 RubyOSA 0.3.0
 =============
 

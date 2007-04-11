@@ -1,5 +1,8 @@
 2007-05-11  Laurent Sansonetti  <lsansonetti@apple.com>
 
+	* tests/tc_rdoc.rb:
+	Added rdoc-osa tests.
+
 	* bin/rdoc-osa:
 	Better generator, can now handle scripting additions.
 

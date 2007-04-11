@@ -1,4 +1,25 @@
+2007-05-11  Justin Palmer  <encytemedia@gmail.com>
+
+	* sample/Photoshop/new_doc.rb,
+	  sample/Photoshop/new_doc_with_text.rb:
+	New sample code.
+
 2007-05-11  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* tests/tc_ical.rb:
+	Better test.
+
+	* tests/tc_omnigraffle.rb:
+	Make sure to open a document before doing the create shape test.
+
+	* tests/as.rb:
+	Rewrote to not depend on RubyCocoa anymore but use osascript(1) instead.
+ 
+	* AUTHORS:
+	Added Justin.
+
+	* src/rbosa.c:
+	Set a 'subj' attribute to the apple event if there is no direct parameter.
 
 	* tests/tc_rdoc.rb:
 	Added rdoc-osa tests.

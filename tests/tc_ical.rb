@@ -26,6 +26,7 @@
 
 require 'test/unit'
 require 'rbosa'
+require 'as'
 
 class TC_iCal < Test::Unit::TestCase
   def setup
@@ -39,6 +40,10 @@ class TC_iCal < Test::Unit::TestCase
       assert_equal(cal.name, names[i])
     end
     assert_equal(@ical.calendars.length, names.length)
+    assert_equal(do_as('get name of calendars'), names.join(', '))
   end
 
+  def do_as(str)
+    AS.do_as("tell application \"iCal\"\n#{str}\nend tell")
+  end
 end

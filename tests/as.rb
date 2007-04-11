@@ -1,11 +1,9 @@
-require 'osx/foundation'
 module AS
   def self.do_as(str)
-    as = OSX::NSAppleScript.alloc.initWithSource(str)
-    ok = as.compileAndReturnError(nil)
-    raise "error when compiling '#{str}'" unless ok
-    desc = as.executeAndReturnError(nil)
-    raise "error when executing '#{str}'" unless desc
-    desc.stringValue.to_s
+    File.open('/tmp/foo.as', 'w') { |f| f.puts(str) }
+    result = `osascript /tmp/foo.as`.chomp
+    File.unlink('/tmp/foo.as')
+    raise "error when executing osascript for '#{str}'" unless $?.success?
+    result
   end
 end

@@ -271,6 +271,7 @@ rbosa_app_send_event (VALUE self, VALUE event_class, VALUE event_id, VALUE param
     VALUE       rb_timeout;
     SInt32      timeout;
     VALUE       rb_reply;
+    unsigned    has_direct_param;
 
     error = AECreateAppleEvent (RVAL2FOURCHAR (event_class),
                                 RVAL2FOURCHAR (event_id),
@@ -282,6 +283,7 @@ rbosa_app_send_event (VALUE self, VALUE event_class, VALUE event_id, VALUE param
         rb_raise (rb_eArgError, "Cannot create Apple Event '%s%s' : %s (%d)", 
                   RVAL2CSTR (event_class), RVAL2CSTR (event_id), error_code_to_string (error), error);
 
+    has_direct_param = 0;
     if (!NIL_P (params)) {
         unsigned    i;
 
@@ -289,6 +291,7 @@ rbosa_app_send_event (VALUE self, VALUE event_class, VALUE event_id, VALUE param
             VALUE   ary;
             VALUE   type;
             VALUE   element;
+            FourCharCode code;
 
             ary = RARRAY (params)->ptr[i];
             if (NIL_P (ary) || RARRAY (ary)->len != 2)
@@ -296,6 +299,10 @@ rbosa_app_send_event (VALUE self, VALUE event_class, VALUE event_id, VALUE param
 
             type = RARRAY (ary)->ptr[0];
             element = RARRAY (ary)->ptr[1];
+            code = RVAL2FOURCHAR (type);
+
+            if (code == '----')
+                has_direct_param = 1;
 
             error = AEPutParamDesc (&ae, RVAL2FOURCHAR (type), rbosa_element_aedesc (element));
             if (error != noErr) { 
@@ -308,7 +315,10 @@ rbosa_app_send_event (VALUE self, VALUE event_class, VALUE event_id, VALUE param
 
     rb_timeout = rb_iv_get (mOSA, "@timeout");
     timeout = NIL_P (rb_timeout) ? kAEDefaultTimeout : NUM2INT (rb_timeout);
-   
+
+    if (has_direct_param == 0)
+        AEPutAttributePtr (&ae, 'subj', typeNull, NULL, 0);
+
     error = AESend (&ae, &reply, (RVAL2CBOOL(need_retval) ? kAEWaitReply : kAENoReply) | kAECanInteract | kAECanSwitchLayer,
                     kAENormalPriority, timeout, NULL, NULL);
 

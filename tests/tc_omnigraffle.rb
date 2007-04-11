@@ -45,20 +45,26 @@ class TC_OmniGraffle < Test::Unit::TestCase
   end
 
   def test_create_shape
-    origin, size = [87.0, 68.0], [102.0, 102.0]
-    g = @omnigraffle.make(OSA::OmniGraffleProfessional::Shape, 
-      :at => @omnigraffle.windows[0].canvas.graphics[0], 
-      :with_properties => {:origin => origin, :size => size})
-    assert_kind_of(OSA::OmniGraffleProfessional::Graphic, g)
+    begin
+      @omnigraffle.open(File.join(Dir.pwd, 'data/test.graffle'))
 
-    assert_kind_of(OSA::OmniGraffleProfessional::Point, g.origin)
-    assert_equal(origin[0], g.origin.x)
-    assert_equal(origin[1], g.origin.y)
-    assert_equal(origin, g.origin.get)
-
-    assert_kind_of(OSA::OmniGraffleProfessional::Point, g.size)
-    assert_equal(size[0], g.size.x)
-    assert_equal(size[1], g.size.y)
-    assert_equal(size, g.size.get)
+      origin, size = [87.0, 68.0], [102.0, 102.0]
+      g = @omnigraffle.make(OSA::OmniGraffleProfessional::Shape, 
+        :at => @omnigraffle.windows[0].canvas.graphics[0], 
+        :with_properties => {:origin => origin, :size => size})
+      assert_kind_of(OSA::OmniGraffleProfessional::Graphic, g)
+  
+      assert_kind_of(OSA::OmniGraffleProfessional::Point, g.origin)
+      assert_equal(origin[0], g.origin.x)
+      assert_equal(origin[1], g.origin.y)
+      assert_equal(origin, g.origin.get)
+  
+      assert_kind_of(OSA::OmniGraffleProfessional::Point, g.size)
+      assert_equal(size[0], g.size.x)
+      assert_equal(size[1], g.size.y)
+      assert_equal(size, g.size.get)
+    ensure
+      @omnigraffle.documents.each { |d| d.close }
+    end
   end
 end

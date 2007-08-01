@@ -1,3 +1,12 @@
+2007-08-01  Laurent Sansonetti  <lsansonetti@apple.com>
+
+	* src/lib/rbosa.rb:
+	Consider the 'specifier' OSA type as 'reference'.
+
+	* src/rbosa.c:
+	Do not raise an exception if an application level descriptor is set but
+	without an error code.
+
 === RubyOSA 0.4.0 ===
 
 2007-05-11  Justin Palmer  <encytemedia@gmail.com>

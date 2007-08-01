@@ -679,7 +679,7 @@ module OSA
         type = type_of_parameter(direct_parameter)
         direct_parameter_optional = parameter_optional?(direct_parameter)
 
-        if type == 'reference'
+        if type == 'reference' or type == 'specifier'
           classes_to_define = all_classes_but_app
           classes_to_define << app_class if direct_parameter_optional
         else 

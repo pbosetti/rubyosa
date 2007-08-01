@@ -227,6 +227,9 @@ __rbosa_raise_potential_app_error (AEDesc *reply)
         return;
     }
 
+    if (errorNum == noErr)
+      return;
+
     /* The reply is an application error. */
 
     errorMsg = error_code_to_string(errorNum);

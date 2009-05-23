@@ -1,6 +1,6 @@
 Gem::Specification.new do |s|
     s.name = 'rubyosa'
-    s.version = '0.5.0'
+    s.version = '0.5.1'
     s.date = '2009-05-23'
     s.summary = 'A Ruby/AppleEvent bridge.'
     s.email = 'lsansonetti@apple.com'

@@ -30,46 +30,7 @@ require 'osa'
 require 'date'
 require 'uri'
 require 'iconv'
-
-# Try to load RubyGems first, libxml-ruby may have been installed by it.
-begin require 'rubygems'; rescue LoadError; end
-
-# If libxml-ruby is not present, switch to REXML.
-USE_LIBXML = begin
-  require 'xml/libxml'
-
-  # libxml-ruby bug workaround.
-  class XML::Node
-    alias_method :old_cmp, :==
-    def ==(x)
-      (x != nil and old_cmp(x))
-    end
-  end
-  true
-rescue LoadError
-  require 'rexml/document'
-
-  # REXML -> libxml-ruby compatibility layer.
-  class REXML::Element
-    alias_method :old_find, :find
-    def find(path=nil, &block)
-      if path.nil? and block
-        old_find { |*x| block.call(*x) }
-      else
-        list = []
-        ::REXML::XPath.each(self, path) { |e| list << e }
-        list
-      end
-    end
-    def [](attr)
-      attributes[attr]
-    end
-    def find_first(path)
-      ::REXML::XPath.first(self, path)
-    end
-  end
-  false
-end
+require 'xml'
 
 class String
   def to_4cc
@@ -466,13 +427,7 @@ module OSA
 
   def self.__load_sdef__(sdef, target, app_module, merge_only=false, app_class=nil)
     # Load the sdef.
-    doc = if USE_LIBXML
-      parser = XML::Parser.new
-      parser.string = sdef
-      parser.parse
-    else
-      REXML::Document.new(sdef)
-    end
+    doc = XML::Parser.string(sdef).parse
 
     # Retrieves and creates enumerations.
     enum_group_codes = {} 
@@ -679,7 +634,7 @@ module OSA
         type = type_of_parameter(direct_parameter)
         direct_parameter_optional = parameter_optional?(direct_parameter)
 
-        if type == 'reference' or type == 'specifier'
+        if type == 'reference'
           classes_to_define = all_classes_but_app
           classes_to_define << app_class if direct_parameter_optional
         else 

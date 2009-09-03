@@ -29,7 +29,7 @@
 #ifndef __RBOSA_H_
 #define __RBOSA_H_
 
-#include "osx_ruby.h"
+#include <ruby.h>
 #include <Carbon/Carbon.h>
 #include <sys/param.h>
 

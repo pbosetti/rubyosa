@@ -29,8 +29,8 @@ Get started
 	$ sudo make install
 	$ sudo make install-extras
 
-`make install' will only install the core of the bridge, while 
-`make install-extras' will install some additional tools such as the rdoc-osa
+`make install` will only install the core of the bridge, while 
+`make install-extras` will install some additional tools such as the rdoc-osa
 utility.
 
 Support

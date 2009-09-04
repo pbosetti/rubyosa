@@ -21,8 +21,9 @@ Requirements
 * ruby 1.8.X or greater
 * libxml-ruby 0.3.8 or greater
 
-Get started
-===========
+Install
+=======
+The plain old way:
 
 	$ ruby extconf.rb
 	$ make
@@ -32,6 +33,14 @@ Get started
 `make install` will only install the core of the bridge, while 
 `make install-extras` will install some additional tools such as the rdoc-osa
 utility.
+
+Otherwise, if you are reading GitHub, use the gem:
+
+	sudo gem install sstephenson-rubyosa
+
+or
+
+	sudo gem install pbosetti-rubyosa
 
 Support
 =======

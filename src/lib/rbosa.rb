@@ -36,7 +36,11 @@ require 'xml'
 
 class String
   def to_4cc
-    OSA.__four_char_code__(Iconv.iconv('MACROMAN', 'UTF-8', self).to_s)
+    if RUBY_VERSION =~ /^1.9/ then
+      OSA.__four_char_code__(Iconv.iconv('MACROMAN', 'UTF-8', self)[0].to_s)
+    else
+      OSA.__four_char_code__(Iconv.iconv('MACROMAN', 'UTF-8', self).to_s)
+    end
   end
 end
 

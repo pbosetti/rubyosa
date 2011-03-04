@@ -38,8 +38,13 @@ exit 1 unless have_func('LSFindApplicationForInfo')
 
 # Avoid `ID' and `T_DATA' symbol collisions between Ruby and Carbon.
 # (adapted code from RubyAEOSA - FUJIMOTO Hisakuni  <hisa@fobj.com>)
-ruby_h = "#{Config::CONFIG['rubyhdrdir']}/ruby.h"
-intern_h = "#{Config::CONFIG['rubyhdrdir']}/ruby/intern.h"
+if RUBY_VERSION =~ /^1.9/ then
+  ruby_h = "#{Config::CONFIG['rubyhdrdir']}/ruby.h"
+  intern_h = "#{Config::CONFIG['rubyhdrdir']}/ruby/intern.h"
+else
+  ruby_h = "#{Config::CONFIG['archdir']}/ruby.h"
+  intern_h = "#{Config::CONFIG['archdir']}/intern.h"
+end
 new_filename_prefix = 'osx_'
 [ ruby_h, intern_h ].each do |src_path|
     dst_fname = File.join('./src', new_filename_prefix + File.basename(src_path))

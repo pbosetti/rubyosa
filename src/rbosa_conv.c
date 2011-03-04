@@ -43,9 +43,15 @@ rbobj_to_fourchar (VALUE obj)
             obj = rb_obj_as_string (obj);
 
         if (rb_obj_is_kind_of (obj, rb_cString)) {
+#ifdef RUBY_19
+            if (RSTRING_LEN(obj) != 4)
+                rb_raise (rb_eArgError, USAGE_MSG);
+            result = *(FourCharCode*)(RSTRING_PTR(obj));
+#else
             if (RSTRING (obj)->len != 4)
                 rb_raise (rb_eArgError, USAGE_MSG);
             result = *(FourCharCode*)(RSTRING (obj)->ptr);
+#endif
             result = CFSwapInt32HostToBig (result);
         }
         else {
@@ -75,9 +81,14 @@ rbobj_to_alias_handle (VALUE obj, AliasHandle *alias)
     Check_Type (obj, T_STRING);
     *alias = NULL;
 
-    URL = CFURLCreateFromFileSystemRepresentation (kCFAllocatorDefault, 
+    URL = CFURLCreateFromFileSystemRepresentation (kCFAllocatorDefault,
+#ifdef RUBY_19
+        										   (const UInt8 *)RSTRING_PTR(obj), 
+        										   RSTRING_LEN(obj),
+#else
                                                    (const UInt8 *)RSTRING (obj)->ptr, 
                                                    RSTRING (obj)->len,
+#endif
                                                    0 /* XXX: normally passing 0 even if it's a directory should
                                                         not hurt, as we are just getting the FSRef. */); 
     if (URL == NULL)
@@ -88,10 +99,18 @@ rbobj_to_alias_handle (VALUE obj, AliasHandle *alias)
         error = FSNewAlias (NULL, &ref, alias);
         if (error != noErr)
             rb_raise (rb_eArgError, "Cannot create alias handle for given filename '%s' : %s (%d)",
+#ifdef RUBY_19
+            		  RSTRING_PTR(obj), GetMacOSStatusErrorString (error), error); 
+#else
                       RSTRING (obj)->ptr, GetMacOSStatusErrorString (error), error); 
+#endif
     }
     else {
         rb_raise (rb_eArgError, "Cannot obtain the filesystem reference for given filename '%s'",
+#ifdef RUBY_19
+            	  RSTRING_PTR(obj));
+#else
                   RSTRING (obj)->ptr);
+#endif
     }
 }

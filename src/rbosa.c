@@ -161,8 +161,13 @@ rbosa_element_new (VALUE self, VALUE type, VALUE value)
     }
     else {
         Check_Type (value, T_STRING);
+#ifdef RUBY_19
+        c_value = RSTRING_PTR(value);
+        c_value_size = RSTRING_LEN(value);
+#else
         c_value = RSTRING (value)->ptr;
         c_value_size = RSTRING (value)->len;
+#endif
     }
 
     error = AECreateDesc (ffc_type, c_value, c_value_size, &desc);
@@ -290,18 +295,32 @@ rbosa_app_send_event (VALUE self, VALUE event_class, VALUE event_id, VALUE param
     if (!NIL_P (params)) {
         unsigned    i;
 
+#ifdef RUBY_19
+		for (i = 0; i < RARRAY_LEN(params); i++) {
+#else
         for (i = 0; i < RARRAY (params)->len; i++) {
+#endif
             VALUE   ary;
             VALUE   type;
             VALUE   element;
             FourCharCode code;
 
+#ifdef RUBY_19
+			ary = RARRAY_PTR(params)[i];
+			if (NIL_P (ary) || RARRAY_LEN(ary) != 2)
+#else
             ary = RARRAY (params)->ptr[i];
-            if (NIL_P (ary) || RARRAY (ary)->len != 2)
+			if (NIL_P (ary) || RARRAY (ary)->len != 2)
+#endif
                 continue;
 
+#ifdef RUBY_19
+            type = RARRAY_PTR(ary)[0];
+            element = RARRAY_PTR(ary)[1];
+#else
             type = RARRAY (ary)->ptr[0];
             element = RARRAY (ary)->ptr[1];
+#endif
             code = RVAL2FOURCHAR (type);
 
             if (code == '----')
@@ -560,8 +579,13 @@ rbosa_elementlist_new (int argc, VALUE *argv, VALUE self)
                   error_code_to_string (error), error);
 
     if (!NIL_P (ary)) {
+#ifdef RUBY_19
+        for (i = 0; i < RARRAY_LEN(ary); i++)
+            __rbosa_elementlist_add (&list, RARRAY_PTR(ary)[i], i + 1); 
+#else
         for (i = 0; i < RARRAY (ary)->len; i++)
             __rbosa_elementlist_add (&list, RARRAY (ary)->ptr[i], i + 1); 
+#endif
     }
     
     return rbosa_element_make (self, &list, Qnil);

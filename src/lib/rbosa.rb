@@ -24,7 +24,9 @@
 # IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
 # POSSIBILITY OF SUCH DAMAGE.
 
-$KCODE = 'u' # we will use UTF-8 strings
+unless RUBY_VERSION =~ /^1.9/ then
+  $KCODE = 'u' # we will use UTF-8 strings
+end
 
 require 'osa'
 require 'date'

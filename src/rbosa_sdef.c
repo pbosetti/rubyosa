@@ -331,12 +331,20 @@ rbosa_scripting_info (VALUE self, VALUE hash)
         remote = CSTR2RVAL (c_remote);
     } 
 
+#ifdef RUBY_19
+    if (RHASH_TBL(hash)->num_entries > 0) {
+#else
     if (RHASH (hash)->tbl->num_entries > 0) {
+#endif
         VALUE   keys;
 
         keys = rb_funcall (hash, rb_intern ("keys"), 0);
         rb_raise (rb_eArgError, "inappropriate argument(s): %s", 
+#ifdef RUBY_19
+                  RSTRING_PTR(rb_inspect (keys)));
+#else
                   RSTRING (rb_inspect (keys))->ptr);
+#endif
     }
 
     if (NIL_P (remote)) {

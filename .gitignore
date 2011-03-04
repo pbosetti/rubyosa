@@ -1,0 +1,4 @@
+*.gem
+*.log
+Makefile
+src/osx_*.h
